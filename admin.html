@@ -3,82 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - EcoShop</title>
+    <title>Admin - EcoShop Management</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
     <style> body { font-family: 'DM Sans', sans-serif; } </style>
 </head>
 <body class="h-full bg-stone-100 flex">
 
-    <aside class="w-64 bg-stone-900 text-white flex flex-col">
+    <aside class="w-64 bg-stone-900 text-white flex flex-col shrink-0">
         <div class="p-6 flex items-center gap-3 border-b border-stone-800">
-            <i data-lucide="settings" class="w-6 h-6 text-green-400"></i>
-            <span class="font-bold text-xl">Admin Panel</span>
+            <i data-lucide="layout-dashboard" class="w-6 h-6 text-green-400"></i>
+            <span class="font-bold text-xl uppercase tracking-wider">Eco Admin</span>
         </div>
         <nav class="flex-1 p-4 space-y-2">
-            <a href="#" class="flex items-center gap-3 bg-green-600 text-white px-4 py-3 rounded-lg">
+            <a href="#" class="flex items-center gap-3 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg shadow-green-900/20">
                 <i data-lucide="package" class="w-5 h-5"></i> Quản lý Sản phẩm
             </a>
-            <a href="#" class="flex items-center gap-3 text-stone-300 hover:bg-stone-800 px-4 py-3 rounded-lg transition">
-                <i data-lucide="award" class="w-5 h-5"></i> Chứng nhận
-            </a>
-            <a href="#" class="flex items-center gap-3 text-stone-300 hover:bg-stone-800 px-4 py-3 rounded-lg transition">
-                <i data-lucide="truck" class="w-5 h-5"></i> Nhà cung cấp
+            <a href="index.html" class="flex items-center gap-3 text-stone-400 hover:bg-stone-800 hover:text-white px-4 py-3 rounded-lg transition">
+                <i data-lucide="eye" class="w-5 h-5"></i> Xem Trang chủ
             </a>
         </nav>
-        <div class="p-4 border-t border-stone-800">
-            <a href="index.html" class="flex items-center gap-2 text-stone-400 hover:text-white transition">
-                <i data-lucide="external-link" class="w-4 h-4"></i> Xem Website
-            </a>
-        </div>
     </aside>
 
     <main class="flex-1 p-8 overflow-y-auto">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-stone-800">Quản lý Sản Phẩm</h1>
-            <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition">
-                <i data-lucide="plus" class="w-4 h-4"></i> Thêm sản phẩm mới
+            <div>
+                <h1 class="text-3xl font-bold text-stone-800">Danh sách sản phẩm</h1>
+                <p class="text-stone-500">Quản lý kho hàng và chứng nhận hữu cơ</p>
+            </div>
+            <button onclick="openModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all transform active:scale-95 shadow-md">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> Thêm mới
             </button>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
-            <table class="w-full text-left border-collapse">
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <table class="w-full text-left">
                 <thead>
-                    <tr class="bg-stone-50 border-b border-stone-200 text-stone-500 text-sm">
-                        <th class="p-4 font-medium">Tên sản phẩm</th>
-                        <th class="p-4 font-medium">Chứng nhận</th>
-                        <th class="p-4 font-medium">Nguồn gốc</th>
-                        <th class="p-4 font-medium">Giá</th>
-                        <th class="p-4 font-medium text-right">Thao tác</th>
+                    <tr class="bg-stone-50 border-b border-stone-200 text-stone-500 text-xs uppercase tracking-widest font-bold">
+                        <th class="p-5">Thông tin sản phẩm</th>
+                        <th class="p-5">Chứng nhận</th>
+                        <th class="p-5">Giá bán</th>
+                        <th class="p-5 text-right">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-100">
-                    <tr class="hover:bg-stone-50 transition">
-                        <td class="p-4 font-medium text-stone-800">Cải xoăn Kale Hữu Cơ</td>
-                        <td class="p-4">
-                            <span class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full">USDA Organic</span>
-                        </td>
-                        <td class="p-4 text-stone-600">Nông trại Đà Lạt</td>
-                        <td class="p-4 text-stone-600">45.000đ</td>
-                        <td class="p-4 flex justify-end gap-2">
-                            <button class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Sửa">
-                                <i data-lucide="edit" class="w-4 h-4"></i>
-                            </button>
-                            <button class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Xóa">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="admin-product-list" class="divide-y divide-stone-100">
+                    </tbody>
             </table>
         </div>
     </main>
 
-    <script src="api.js"></script>
-    <script>
-        lucide.createIcons();
-        // Bạn có thể viết logic gọi getProducts() từ api.js và render vào <tbody> tại đây
-    </script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>
