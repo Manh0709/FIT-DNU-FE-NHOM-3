@@ -4,102 +4,907 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản trị — EcoShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+  <style>
+    /* ── ADMIN SHELL ─────────────────────────────────────── */
+    body { margin: 0; background: #f0f4f1; }
+
+    .admin-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────────── */
+    .admin-sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--green-900);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 50;
+    }
+
+    .sidebar-brand {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-logo {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      color: var(--green-300);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .sidebar-logo span { color: #fff; }
+    .sidebar-subtitle {
+      font-size: .72rem;
+      color: rgba(255,255,255,.4);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+    }
+
+    .sidebar-user {
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--green-600);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .sidebar-user-info { min-width: 0; }
+    .sidebar-user-name {
+      font-size: .85rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-user-role {
+      font-size: .72rem;
+      color: var(--green-400);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sidebar-section-label {
+      font-size: .68rem;
+      font-weight: 700;
+      color: rgba(255,255,255,.3);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 10px 12px 4px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: rgba(255,255,255,.65);
+      font-size: .88rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .sidebar-link:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .sidebar-link.active { background: var(--green-700); color: #fff; }
+    .sidebar-link .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+    .sidebar-link .nav-count {
+      margin-left: auto;
+      background: var(--green-600);
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .btn-sidebar-logout {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(192,57,43,.15);
+      border: 1px solid rgba(192,57,43,.3);
+      color: #ffaaaa;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      font-family: var(--font-body);
+    }
+    .btn-sidebar-logout:hover { background: rgba(192,57,43,.35); color: #fff; }
+
+    /* ── MAIN CONTENT ────────────────────────────────────── */
+    .admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .admin-topbar {
+      background: #fff;
+      border-bottom: 1px solid #e4ede8;
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      box-shadow: 0 1px 12px rgba(0,0,0,.05);
+    }
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      color: var(--green-900);
+    }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .topbar-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 600;
+      border: 1.5px solid var(--green-200, #c8e6d4);
+      color: var(--green-700);
+      background: var(--green-50);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      font-family: var(--font-body);
+    }
+    .topbar-btn:hover { background: var(--green-100); border-color: var(--green-400); }
+
+    .admin-content { padding: 28px 32px 48px; }
+
+    /* ── DASHBOARD STATS ─────────────────────────────────── */
+    #tab-dashboard { display: none; }
+    #tab-dashboard.active { display: block; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 22px 24px;
+      box-shadow: 0 2px 12px rgba(13,43,29,.07);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid #e8f0eb;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(13,43,29,.12); }
+    .stat-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.green  { background: #e6f5ed; }
+    .stat-icon.blue   { background: #e8f0ff; }
+    .stat-icon.orange { background: #fff4e5; }
+    .stat-icon.purple { background: #f3e8ff; }
+    .stat-body { min-width: 0; }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--green-900);
+      line-height: 1;
+    }
+    .stat-label { font-size: .8rem; color: var(--text-light); margin-top: 4px; }
+
+    .dashboard-section { margin-bottom: 28px; }
+    .dashboard-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--green-800);
+      margin-bottom: 14px;
+    }
+
+    .recent-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .recent-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(13,43,29,.06);
+      border: 1px solid #e8f0eb;
+    }
+    .recent-card h3 {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--green-800);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--green-50);
+      font-size: .85rem;
+    }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-thumb {
+      width: 36px; height: 30px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: var(--green-100);
+      flex-shrink: 0;
+    }
+    .recent-name { flex: 1; font-weight: 500; color: var(--text-dark); }
+    .recent-price { color: var(--green-700); font-weight: 700; font-size: .82rem; }
+
+    /* ── PANEL SHELL ─────────────────────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .panel-head-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; gap: 10px; }
+    .panel-head h2 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--green-900);
+    }
+    .panel-search {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: #f0f4f1;
+      border: 1.5px solid #d4e5db;
+      border-radius: 24px;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .panel-search:focus-within {
+      border-color: var(--green-500);
+      box-shadow: 0 0 0 3px rgba(58,158,104,.12);
+      background: #fff;
+    }
+    .panel-search input {
+      border: none;
+      background: transparent;
+      padding: 8px 14px 8px 16px;
+      font-size: .85rem;
+      width: 200px;
+      box-shadow: none;
+      outline: none;
+    }
+    .panel-search .search-icon {
+      padding: 8px 14px;
+      color: var(--text-light);
+      font-size: .85rem;
+      background: none;
+      border: none;
+      cursor: default;
+    }
+
+    .panel-head-right { display: flex; align-items: center; gap: 8px; }
+    .btn-add {
+      background: var(--green-600);
+      color: #fff;
+      padding: 9px 20px;
+      border-radius: 24px;
+      font-weight: 600;
+      font-size: .85rem;
+      display: flex; align-items: center; gap: 6px;
+      transition: background .2s, box-shadow .2s;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+    }
+    .btn-add:hover { background: var(--green-700); box-shadow: 0 4px 14px rgba(46,125,82,.3); }
+
+    .btn-export {
+      background: #fff;
+      color: var(--green-700);
+      padding: 9px 16px;
+      border-radius: 24px;
+      font-weight: 600;
+      font-size: .82rem;
+      display: flex; align-items: center; gap: 5px;
+      border: 1.5px solid #c8e0d2;
+      cursor: pointer;
+      transition: background .2s;
+      font-family: var(--font-body);
+    }
+    .btn-export:hover { background: var(--green-50); }
+
+    /* ── TABLE ───────────────────────────────────────────── */
+    .table-wrap {
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(13,43,29,.07);
+      border: 1px solid #e4ede8;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--green-900); }
+    thead th {
+      color: var(--green-300);
+      font-weight: 600;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding: 14px 16px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    thead th.sortable { cursor: pointer; user-select: none; }
+    thead th.sortable:hover { color: #fff; }
+    thead th .sort-arrow { margin-left: 4px; opacity: .5; }
+    thead th.sort-asc .sort-arrow::after { content: ' ↑'; opacity: 1; }
+    thead th.sort-desc .sort-arrow::after { content: ' ↓'; opacity: 1; }
+
+    tbody tr {
+      border-bottom: 1px solid #f0f5f2;
+      transition: background .15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f7fbf8; }
+    tbody td { padding: 12px 16px; font-size: .88rem; vertical-align: middle; color: var(--text-dark); }
+
+    .empty-row { text-align: center; color: var(--text-light); padding: 48px !important; }
+    .empty-row-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .empty-row-inner .empty-icon { font-size: 2rem; }
+
+    .thumb {
+      width: 48px; height: 40px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid var(--green-100);
+      cursor: zoom-in;
+      transition: transform .2s;
+    }
+    .thumb:hover { transform: scale(1.1); }
+
+    .actions { display: flex; gap: 6px; }
+    .btn-edit, .btn-del {
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: .9rem;
+      transition: background .15s, transform .15s;
+      border: none;
+      cursor: pointer;
+      background: none;
+    }
+    .btn-edit:hover { background: #e6f5ed; transform: scale(1.1); }
+    .btn-del:hover  { background: #fde8e6; transform: scale(1.1); }
+
+    .td-name { font-weight: 600; color: var(--green-900); }
+    .td-price { font-weight: 700; color: var(--green-700); white-space: nowrap; }
+    .td-origin { color: var(--text-light); font-size: .82rem; }
+
+    /* Table footer / count */
+    .table-footer {
+      padding: 10px 18px;
+      font-size: .8rem;
+      color: var(--text-light);
+      background: #f7fbf8;
+      border-top: 1px solid #e8f0eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ── IMAGE PREVIEW MODAL ─────────────────────────────── */
+    #img-preview-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(6px);
+      z-index: 600;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    #img-preview-modal.active { opacity: 1; pointer-events: auto; }
+    #img-preview-modal img {
+      max-width: 90vw; max-height: 85vh;
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      transform: scale(.9);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    #img-preview-modal.active img { transform: scale(1); }
+    .img-preview-close {
+      position: absolute; top: 20px; right: 24px;
+      font-size: 1.8rem; color: #fff;
+      background: rgba(255,255,255,.1);
+      border: none; border-radius: 50%;
+      width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .img-preview-close:hover { background: rgba(255,255,255,.25); }
+
+    /* ── MODAL OVERRIDES ─────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(13,43,29,.55);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 36px;
+      width: min(520px, 95vw);
+      box-shadow: 0 20px 60px rgba(13,43,29,.2);
+      transform: translateY(24px) scale(.96);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-overlay.active .modal-box { transform: none; }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--green-100);
+    }
+    .modal-header h3 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      color: var(--green-900);
+    }
+    .modal-close {
+      font-size: 1.3rem;
+      line-height: 1;
+      color: var(--text-light);
+      padding: 6px 9px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .modal-close:hover { background: var(--green-100); color: var(--green-700); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text-mid);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      border: 1.5px solid #d8e8df;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: .9rem;
+      width: 100%;
+      background: #f9fcfa;
+      color: var(--text-dark);
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--green-500);
+      box-shadow: 0 0 0 3px rgba(58,158,104,.12);
+      background: #fff;
+      outline: none;
+    }
+
+    /* Image URL preview */
+    .img-url-wrap { position: relative; }
+    .img-url-preview {
+      margin-top: 8px;
+      width: 100%; height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px dashed #c8e0d2;
+      display: none;
+      background: var(--green-50);
+    }
+    .img-url-preview.show { display: block; }
+
+    .form-actions {
+      display: flex; gap: 10px; margin-top: 22px;
+      justify-content: flex-end;
+      padding-top: 18px;
+      border-top: 1px solid var(--green-100);
+    }
+
+    .btn-primary {
+      background: var(--green-600);
+      color: #fff;
+      padding: 10px 28px;
+      border-radius: 24px;
+      font-weight: 600;
+      font-size: .9rem;
+      border: none;
+      cursor: pointer;
+      transition: background .2s, transform .2s;
+      font-family: var(--font-body);
+    }
+    .btn-primary:hover { background: var(--green-700); transform: translateY(-1px); }
+    .btn-secondary {
+      background: #f0f4f1;
+      color: var(--green-700);
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-weight: 500;
+      font-size: .9rem;
+      border: 1.5px solid #d4e5db;
+      cursor: pointer;
+      transition: background .2s;
+      font-family: var(--font-body);
+    }
+    .btn-secondary:hover { background: #e0ece5; }
+    .btn-danger {
+      background: #c0392b;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background .2s;
+      font-family: var(--font-body);
+    }
+    .btn-danger:hover { background: #992d22; }
+
+    /* ── BADGE ───────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: .74rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-green  { background: #d4edda; color: #155724; }
+    .badge-blue   { background: #cce5ff; color: #004085; }
+    .badge-orange { background: #fff3cd; color: #856404; }
+
+    /* ── FOOTER ──────────────────────────────────────────── */
+    .admin-main > footer {
+      background: var(--green-900);
+      color: rgba(255,255,255,.5);
+      text-align: center;
+      padding: 18px;
+      font-size: .8rem;
+      margin-top: auto;
+    }
+    .admin-main > footer strong { color: var(--green-300); }
+
+    /* ── TOAST ───────────────────────────────────────────── */
+    #toast-container {
+      position: fixed; bottom: 28px; right: 28px;
+      z-index: 1000;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast {
+      padding: 13px 20px 13px 16px;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: .88rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      opacity: 0; transform: translateX(20px);
+      transition: all .3s;
+      min-width: 220px;
+      color: #fff;
+      background: var(--green-700);
+      display: flex; align-items: center; gap: 10px;
+      border-left: 4px solid var(--green-400);
+    }
+    .toast::before { content: '✅'; font-size: 1rem; }
+    .toast.toast-error { background: #c0392b; border-left-color: #ff6b6b; }
+    .toast.toast-error::before { content: '❌'; }
+    .toast.show { opacity: 1; transform: none; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .admin-sidebar { display: none; }
+      .admin-main { width: 100%; }
+      .admin-content { padding: 20px 16px 40px; }
+      .admin-topbar { padding: 0 16px; }
+      .recent-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="site-header">
-    <div class="logo">🌿 <span>Eco</span>Shop</div>
-    <nav class="header-nav">
-      <a href="index.html">Cửa hàng</a>
-      <a href="admin.html" class="active">Quản trị</a>
-      <!-- header.js sẽ inject badge user + nút đăng xuất vào đây -->
+<div class="admin-shell">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html" class="sidebar-logo">🌿 <span>Eco</span>Shop</a>
+      <div class="sidebar-subtitle">Admin Dashboard</div>
+    </div>
+
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar">👤</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebar-name">Đang tải…</div>
+        <div class="sidebar-user-role">Administrator</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Tổng quan</div>
+      <button class="sidebar-link active" data-tab="dashboard">
+        <span class="nav-icon">📊</span> Bảng điều khiển
+      </button>
+
+      <div class="sidebar-section-label">Quản lý</div>
+      <button class="sidebar-link" data-tab="products">
+        <span class="nav-icon">🌿</span> Sản phẩm
+        <span class="nav-count" id="count-products">—</span>
+      </button>
+      <button class="sidebar-link" data-tab="suppliers">
+        <span class="nav-icon">🏭</span> Nhà cung cấp
+        <span class="nav-count" id="count-suppliers">—</span>
+      </button>
+      <button class="sidebar-link" data-tab="certs">
+        <span class="nav-icon">🏆</span> Chứng nhận
+        <span class="nav-count" id="count-certs">—</span>
+      </button>
+
+      <div class="sidebar-section-label">Cửa hàng</div>
+      <a href="index.html" class="sidebar-link">
+        <span class="nav-icon">🛍️</span> Xem cửa hàng
+      </a>
     </nav>
-  </header>
 
-  <!-- ADMIN WRAPPER -->
-  <div class="admin-wrapper">
-    <div class="admin-header">
-      <h1>🛠️ Bảng điều khiển</h1>
-      <p>Quản lý sản phẩm, nhà cung cấp và chứng nhận của EcoShop</p>
+    <div class="sidebar-footer">
+      <button class="btn-sidebar-logout" id="btn-logout">
+        🚪 Đăng xuất
+      </button>
     </div>
+  </aside>
 
-    <!-- TABS -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="products">🌿 Sản phẩm</button>
-      <button class="tab-btn" data-tab="suppliers">🏭 Nhà cung cấp</button>
-      <button class="tab-btn" data-tab="certs">🏆 Chứng nhận</button>
-    </div>
+  <!-- ══ MAIN ══ -->
+  <div class="admin-main">
 
-    <!-- TAB: PRODUCTS -->
-    <div id="tab-products" class="tab-panel active">
-      <div class="panel-toolbar">
-        <h2>Danh sách sản phẩm</h2>
-        <button id="btn-add-product" class="btn-add">＋ Thêm sản phẩm</button>
-      </div>
-      <div class="table-wrap">
-        <table id="products-table">
-          <thead>
-            <tr>
-              <th>Ảnh</th><th>Tên sản phẩm</th><th>Giá</th>
-              <th>Xuất xứ</th><th>Chứng nhận</th><th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody><tr><td colspan="6" class="empty-row">Đang tải…</td></tr></tbody>
-        </table>
+    <!-- Topbar -->
+    <div class="admin-topbar">
+      <span class="topbar-title" id="topbar-title">📊 Bảng điều khiển</span>
+      <div class="topbar-actions">
+        <button class="topbar-btn" onclick="window.location.reload()">🔄 Làm mới</button>
+        <a href="index.html" class="topbar-btn" style="text-decoration:none">🛍️ Cửa hàng</a>
       </div>
     </div>
 
-    <!-- TAB: SUPPLIERS -->
-    <div id="tab-suppliers" class="tab-panel">
-      <div class="panel-toolbar">
-        <h2>Nhà cung cấp</h2>
-        <button id="btn-add-supplier" class="btn-add">＋ Thêm nhà cung cấp</button>
+    <div class="admin-content">
+
+      <!-- ══ TAB: DASHBOARD ══ -->
+      <div id="tab-dashboard" class="tab-panel active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon green">🌿</div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-products">—</div>
+              <div class="stat-label">Sản phẩm</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">🏭</div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-suppliers">—</div>
+              <div class="stat-label">Nhà cung cấp</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">🏆</div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-certs">—</div>
+              <div class="stat-label">Chứng nhận</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">💰</div>
+            <div class="stat-body">
+              <div class="stat-value" id="stat-avg-price">—</div>
+              <div class="stat-label">Giá TB sản phẩm</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="recent-grid">
+          <div class="recent-card">
+            <h3>🌿 Sản phẩm mới nhất</h3>
+            <div id="recent-products"><div class="empty-row" style="padding:20px;text-align:center;color:var(--text-light)">Đang tải…</div></div>
+          </div>
+          <div class="recent-card">
+            <h3>🏭 Nhà cung cấp</h3>
+            <div id="recent-suppliers"><div class="empty-row" style="padding:20px;text-align:center;color:var(--text-light)">Đang tải…</div></div>
+          </div>
+        </div>
       </div>
-      <div class="table-wrap">
-        <table id="suppliers-table">
-          <thead>
-            <tr>
-              <th>Tên công ty</th><th>Địa chỉ</th><th>Điện thoại</th>
-              <th>Email</th><th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody><tr><td colspan="5" class="empty-row">Đang tải…</td></tr></tbody>
-        </table>
+
+      <!-- ══ TAB: PRODUCTS ══ -->
+      <div id="tab-products" class="tab-panel">
+        <div class="panel-head">
+          <div class="panel-head-left">
+            <h2>🌿 Sản phẩm</h2>
+            <div class="panel-search">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="search-products" placeholder="Tìm tên, xuất xứ…">
+            </div>
+          </div>
+          <div class="panel-head-right">
+            <button class="btn-export" id="btn-export-products">📥 Export CSV</button>
+            <button id="btn-add-product" class="btn-add">＋ Thêm sản phẩm</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="products-table">
+            <thead>
+              <tr>
+                <th>Ảnh</th>
+                <th class="sortable" data-sort="name">Tên sản phẩm <span class="sort-arrow"></span></th>
+                <th class="sortable" data-sort="price">Giá <span class="sort-arrow"></span></th>
+                <th>Xuất xứ</th>
+                <th>Chứng nhận</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody><tr><td colspan="6" class="empty-row">Đang tải…</td></tr></tbody>
+          </table>
+          <div class="table-footer" id="products-footer">— sản phẩm</div>
+        </div>
       </div>
+
+      <!-- ══ TAB: SUPPLIERS ══ -->
+      <div id="tab-suppliers" class="tab-panel">
+        <div class="panel-head">
+          <div class="panel-head-left">
+            <h2>🏭 Nhà cung cấp</h2>
+            <div class="panel-search">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="search-suppliers" placeholder="Tìm tên, địa chỉ…">
+            </div>
+          </div>
+          <div class="panel-head-right">
+            <button class="btn-export" id="btn-export-suppliers">📥 Export CSV</button>
+            <button id="btn-add-supplier" class="btn-add">＋ Thêm nhà cung cấp</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="suppliers-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="name">Tên công ty <span class="sort-arrow"></span></th>
+                <th>Địa chỉ</th>
+                <th>Điện thoại</th>
+                <th>Email</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody><tr><td colspan="5" class="empty-row">Đang tải…</td></tr></tbody>
+          </table>
+          <div class="table-footer" id="suppliers-footer">— nhà cung cấp</div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: CERTS ══ -->
+      <div id="tab-certs" class="tab-panel">
+        <div class="panel-head">
+          <div class="panel-head-left">
+            <h2>🏆 Chứng nhận</h2>
+            <div class="panel-search">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="search-certs" placeholder="Tìm chứng nhận…">
+            </div>
+          </div>
+          <div class="panel-head-right">
+            <button id="btn-add-cert" class="btn-add">＋ Thêm chứng nhận</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="certs-table">
+            <thead>
+              <tr>
+                <th>Chứng nhận</th>
+                <th>Màu badge</th>
+                <th>Mô tả</th>
+                <th># Sản phẩm</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody><tr><td colspan="5" class="empty-row">Đang tải…</td></tr></tbody>
+          </table>
+          <div class="table-footer" id="certs-footer">— chứng nhận</div>
+        </div>
+      </div>
+
+    </div><!-- /admin-content -->
+
+    <footer>© 2025 <strong>EcoShop</strong> — Bảng điều khiển Admin 🛠️</footer>
+  </div><!-- /admin-main -->
+</div><!-- /admin-shell -->
+
+<!-- ══ IMAGE PREVIEW MODAL ══ -->
+<div id="img-preview-modal">
+  <button class="img-preview-close" id="img-preview-close">✕</button>
+  <img id="img-preview-src" src="" alt="">
+</div>
+
+<!-- ══ PRODUCT MODAL ══ -->
+<div id="product-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="product-modal-title">Thêm sản phẩm</h3>
+      <button class="modal-close" aria-label="Đóng">✕</button>
     </div>
-
-    <!-- TAB: CERTIFICATIONS -->
-    <div id="tab-certs" class="tab-panel">
-      <div class="panel-toolbar">
-        <h2>Chứng nhận chất lượng</h2>
-        <button id="btn-add-cert" class="btn-add">＋ Thêm chứng nhận</button>
-      </div>
-      <div class="table-wrap">
-        <table id="certs-table">
-          <thead>
-            <tr>
-              <th>Tên chứng nhận</th><th>Màu badge</th><th>Mô tả</th><th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody><tr><td colspan="4" class="empty-row">Đang tải…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div><!-- /admin-wrapper -->
-
-  <!-- ════════════ MODALS ════════════ -->
-
-  <!-- Product Modal -->
-  <div id="product-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 id="product-modal-title">Thêm sản phẩm</h3>
-        <button class="modal-close" aria-label="Đóng">✕</button>
-      </div>
-      <form id="product-form" novalidate>
+    <form id="product-form" novalidate>
+      <div class="form-row">
         <div class="form-group">
           <label for="p-name">Tên sản phẩm *</label>
           <input id="p-name" type="text" required placeholder="VD: Ống hút tre cao cấp">
@@ -108,46 +913,47 @@
           <label for="p-price">Giá (VND) *</label>
           <input id="p-price" type="number" required placeholder="VD: 15000">
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label for="p-origin">Xuất xứ</label>
           <input id="p-origin" type="text" placeholder="VD: Hòa Bình">
         </div>
         <div class="form-group">
-          <label for="p-desc">Mô tả</label>
-          <textarea id="p-desc" rows="3" placeholder="Mô tả ngắn về sản phẩm…"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="p-image">URL ảnh</label>
-          <input id="p-image" type="url" placeholder="https://…">
-        </div>
-        <div class="form-group">
           <label for="p-cert">Chứng nhận</label>
           <select id="p-cert"></select>
         </div>
-        <div class="form-actions">
-          <button type="button" class="btn-secondary modal-cancel">Hủy</button>
-          <button type="submit" class="btn-primary">💾 Lưu</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Supplier Modal -->
-  <div id="supplier-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="supplier-modal-title">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 id="supplier-modal-title">Thêm nhà cung cấp</h3>
-        <button class="modal-close" aria-label="Đóng">✕</button>
       </div>
-      <form id="supplier-form" novalidate>
-        <div class="form-group">
-          <label for="s-name">Tên công ty *</label>
-          <input id="s-name" type="text" required placeholder="VD: Hợp tác xã Tre Việt">
-        </div>
-        <div class="form-group">
-          <label for="s-address">Địa chỉ</label>
-          <input id="s-address" type="text" placeholder="VD: Mai Châu, Hòa Bình">
-        </div>
+      <div class="form-group">
+        <label for="p-desc">Mô tả</label>
+        <textarea id="p-desc" rows="3" placeholder="Mô tả ngắn về sản phẩm…"></textarea>
+      </div>
+      <div class="form-group img-url-wrap">
+        <label for="p-image">URL ảnh</label>
+        <input id="p-image" type="url" placeholder="https://…">
+        <img id="p-image-preview" class="img-url-preview" alt="preview">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary modal-cancel">Hủy</button>
+        <button type="submit" class="btn-primary">💾 Lưu sản phẩm</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ SUPPLIER MODAL ══ -->
+<div id="supplier-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="supplier-modal-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="supplier-modal-title">Thêm nhà cung cấp</h3>
+      <button class="modal-close" aria-label="Đóng">✕</button>
+    </div>
+    <form id="supplier-form" novalidate>
+      <div class="form-group">
+        <label for="s-name">Tên công ty *</label>
+        <input id="s-name" type="text" required placeholder="VD: Hợp tác xã Tre Việt">
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label for="s-contact">Điện thoại</label>
           <input id="s-contact" type="tel" placeholder="VD: 0912 345 678">
@@ -156,22 +962,28 @@
           <label for="s-email">Email</label>
           <input id="s-email" type="email" placeholder="contact@example.com">
         </div>
-        <div class="form-actions">
-          <button type="button" class="btn-secondary modal-cancel">Hủy</button>
-          <button type="submit" class="btn-primary">💾 Lưu</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Cert Modal -->
-  <div id="cert-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cert-modal-title">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 id="cert-modal-title">Thêm chứng nhận</h3>
-        <button class="modal-close" aria-label="Đóng">✕</button>
       </div>
-      <form id="cert-form" novalidate>
+      <div class="form-group">
+        <label for="s-address">Địa chỉ</label>
+        <input id="s-address" type="text" placeholder="VD: Mai Châu, Hòa Bình">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary modal-cancel">Hủy</button>
+        <button type="submit" class="btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ CERT MODAL ══ -->
+<div id="cert-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cert-modal-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="cert-modal-title">Thêm chứng nhận</h3>
+      <button class="modal-close" aria-label="Đóng">✕</button>
+    </div>
+    <form id="cert-form" novalidate>
+      <div class="form-row">
         <div class="form-group">
           <label for="c-name">Tên chứng nhận *</label>
           <input id="c-name" type="text" required placeholder="VD: Chứng nhận Hữu cơ">
@@ -184,35 +996,32 @@
             <option value="orange">🟠 Cam (Natural)</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="c-desc">Mô tả</label>
-          <textarea id="c-desc" rows="2" placeholder="Mô tả tiêu chuẩn chứng nhận…"></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn-secondary modal-cancel">Hủy</button>
-          <button type="submit" class="btn-primary">💾 Lưu</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Confirm Delete Modal -->
-  <div id="confirm-modal" class="modal-overlay" role="alertdialog" aria-modal="true">
-    <div class="modal-box" style="max-width:380px;text-align:center">
-      <p style="font-size:2.5rem;margin-bottom:12px">🗑️</p>
-      <p id="confirm-msg" style="font-size:1rem;color:var(--text-mid);margin-bottom:28px">Bạn có chắc muốn xóa?</p>
-      <div class="form-actions" style="justify-content:center">
-        <button id="confirm-cancel" class="btn-secondary">Hủy</button>
-        <button id="confirm-ok" class="btn-danger">Xóa</button>
       </div>
+      <div class="form-group">
+        <label for="c-desc">Mô tả</label>
+        <textarea id="c-desc" rows="2" placeholder="Mô tả tiêu chuẩn chứng nhận…"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary modal-cancel">Hủy</button>
+        <button type="submit" class="btn-primary">💾 Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ CONFIRM MODAL ══ -->
+<div id="confirm-modal" class="modal-overlay" role="alertdialog" aria-modal="true">
+  <div class="modal-box" style="max-width:360px;text-align:center">
+    <p style="font-size:2.8rem;margin-bottom:10px">🗑️</p>
+    <p id="confirm-msg" style="font-size:.95rem;color:var(--text-mid);margin-bottom:6px">Bạn có chắc muốn xóa?</p>
+    <p id="confirm-detail" style="font-size:.82rem;color:var(--text-light);margin-bottom:24px"></p>
+    <div class="form-actions" style="justify-content:center">
+      <button id="confirm-cancel" class="btn-secondary">Hủy</button>
+      <button id="confirm-ok" class="btn-danger">🗑️ Xóa</button>
     </div>
   </div>
+</div>
 
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <p>© 2025 <strong>EcoShop</strong> — Bảng điều khiển dành cho Admin 🛠️</p>
-  </footer>
-
-  <script type="module" src="js/admin.js"></script>
+<script type="module" src="js/admin.js"></script>
 </body>
 </html>

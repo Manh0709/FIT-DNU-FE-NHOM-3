@@ -8,7 +8,7 @@ function initDatabase() {
   if (!localStorage.getItem(USERS_DB_KEY)) {
     localStorage.setItem(USERS_DB_KEY, JSON.stringify([
       { id: '1', name: 'Quản trị viên', email: 'admin@gmail.com', password: 'adminpassword', role: 'admin' },
-      { id: '2', name: 'Người dùng Eco', email: 'user@gmail.com',  password: 'userpassword',  role: 'user'  },
+      { id: '2', name: 'Người dùng Eco', email: 'user@gmail.com',  password: 'git add .',  role: 'user'  },
     ]));
   }
 }
