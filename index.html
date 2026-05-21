@@ -1,71 +1,103 @@
-<!doctype html>
-<html lang="vi" class="h-full scroll-smooth">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Green Leaf Organic - EcoShop</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>EcoShop — Sản phẩm hữu cơ & thân thiện môi trường</title>
   <link rel="stylesheet" href="css/style.css">
-  
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 </head>
-<body class="h-full font-body bg-stone-50 leaf-pattern flex flex-col min-h-screen">
-  
-  <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-green-100 shadow-sm">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-9 h-9 rounded-full bg-green-600 flex items-center justify-center float-anim">
-          <i data-lucide="leaf" class="w-5 h-5 text-white"></i>
-        </div>
-        <span class="font-heading text-xl font-bold text-green-900">EcoShop</span>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="logo">🌿 <span>Eco</span>Shop</div>
+    <nav class="header-nav">
+      <a href="index.html" class="active">Cửa hàng</a>
+      <a href="admin.html" id="nav-admin-link" hidden>Quản trị</a>
+      <div id="nav-auth-links" class="nav-auth-links">
+        <a href="auth.html" class="nav-login-link">Đăng nhập</a>
+        <a href="auth.html?tab=register" class="nav-register-link">Đăng ký</a>
       </div>
-      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-stone-600">
-        <a href="#" class="text-green-700 font-semibold transition">Cửa hàng</a>
-        <a href="#order-section" class="hover:text-green-700 transition">Đặt hàng</a>
-        <a href="admin.html" class="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition">Vào Admin</a>
+      <!-- main.js inject badge user + nút đăng xuất vào đây khi đã login -->
+    </nav>
+  </header>
+
+  <!-- GUEST BANNER -->
+  <div id="guest-banner" class="guest-banner" hidden>
+    <div class="guest-banner-content">
+      <span class="guest-banner-text">🌱 Tham gia EcoShop để đặt hàng và nhận ưu đãi độc quyền!</span>
+      <div class="guest-banner-actions">
+        <a href="auth.html?tab=register" class="btn-banner-register">Đăng ký miễn phí</a>
+        <a href="auth.html" class="btn-banner-login">Đăng nhập</a>
       </div>
     </div>
-  </nav>
+  </div>
 
-  <main class="flex-grow max-w-7xl mx-auto px-6 py-8 w-full">
-    
-    <div class="mb-8 flex flex-wrap items-center gap-4 fade-in">
-      <h3 class="font-semibold text-stone-700">Lọc theo chứng nhận:</h3>
-      <select class="bg-white border border-green-200 text-stone-700 rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5 outline-none shadow-sm">
-        <option value="all">Tất cả chứng nhận</option>
-        <option value="USDA Organic">USDA Organic</option>
-        <option value="EU Organic">EU Organic</option>
-        <option value="VietGAP">VietGAP</option>
-      </select>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Sản phẩm <em>hữu cơ</em><br>thân thiện với môi trường</h1>
+      <p>Chứng nhận chất lượng · Nguồn gốc rõ ràng · Bền vững cho thế hệ sau</p>
+      <div class="hero-search">
+        <input type="text" id="search-input" placeholder="Tìm sản phẩm, xuất xứ…" aria-label="Tìm kiếm sản phẩm">
+        <button class="btn-search" type="button">🔍 Tìm</button>
+      </div>
     </div>
+  </section>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-list">
+  <!-- FILTERS -->
+  <section class="filter-section">
+    <h2>Lọc theo chứng nhận</h2>
+    <div id="filter-bar" role="group" aria-label="Lọc chứng nhận"></div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="products-section">
+    <div id="product-grid" aria-live="polite">
+      <p class="empty-msg">Đang tải sản phẩm…</p>
     </div>
+  </section>
 
-    <div id="order-section" class="mt-16 bg-white p-8 rounded-2xl shadow-sm border border-green-100 max-w-2xl mx-auto fade-in">
-      <h2 class="font-heading text-2xl font-bold text-stone-800 mb-6 flex items-center gap-2">
-        <i data-lucide="clipboard-list" class="text-green-600"></i> Form Đặt Hàng
-      </h2>
-      <form class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-stone-700 mb-1">Họ và tên</label>
-          <input type="text" class="w-full border border-stone-200 rounded-lg p-2.5 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none">
+  <!-- ORDER MODAL -->
+  <div id="order-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="order-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="order-title">Đặt hàng</h3>
+        <button id="order-close" class="modal-close" aria-label="Đóng">✕</button>
+      </div>
+      <p style="margin-bottom:18px;color:var(--text-mid);">
+        Sản phẩm: <strong id="order-product-name" style="color:var(--green-700)"></strong>
+      </p>
+      <form id="order-form" novalidate>
+        <div class="form-group">
+          <label for="order-name">Họ tên</label>
+          <input id="order-name" type="text" placeholder="Nguyễn Văn A" required>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-stone-700 mb-1">Sản phẩm muốn đặt</label>
-          <textarea rows="3" class="w-full border border-stone-200 rounded-lg p-2.5 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" placeholder="Ví dụ: 2kg Cải Kale, 1kg Cà chua..."></textarea>
+        <div class="form-group">
+          <label for="order-phone">Số điện thoại</label>
+          <input id="order-phone" type="tel" placeholder="0912 345 678" required>
         </div>
-        <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-          Gửi Đơn Hàng
-        </button>
+        <div class="form-group">
+          <label for="order-address">Địa chỉ giao hàng</label>
+          <input id="order-address" type="text" placeholder="Số nhà, đường, quận, thành phố">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary modal-cancel">Hủy</button>
+          <button type="submit" class="btn-primary">🛒 Xác nhận đặt hàng</button>
+        </div>
       </form>
     </div>
+  </div>
 
-  </main>
+  <!-- SUCCESS TOAST -->
+  <div id="success-msg" role="status" aria-live="polite"></div>
 
-  <script src="js/utils.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/main.js"></script>
-  </body>
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p>© 2025 <strong>EcoShop</strong> — Vì một Việt Nam xanh hơn 🌱</p>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
 </html>

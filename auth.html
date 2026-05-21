@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập — EcoShop</title>
+  <!-- Preconnect để giảm latency font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Non-blocking font load: media=print rồi swap sang all -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+</head>
+<body class="auth-body-page">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="logo">🌿 <span>Eco</span>Shop</div>
+    <nav class="header-nav">
+      <a href="index.html">Cửa hàng</a>
+    </nav>
+  </header>
+
+  <!-- AUTH PAGE -->
+  <main class="auth-page">
+    <div class="auth-card">
+
+      <!-- Brand strip -->
+      <div class="auth-brand">
+        <div class="auth-brand-icon">🌿</div>
+        <h1>EcoShop</h1>
+        <p>Sản phẩm hữu cơ · Thân thiện môi trường</p>
+      </div>
+
+      <!-- Admin hint -->
+      <div class="admin-hint">
+        <span>🛠️ Admin mặc định:</span>
+        <code>admin@ecoshop.vn</code> / <code>Admin@2025</code>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Đăng nhập</button>
+        <button class="auth-tab" data-tab="register">Đăng ký</button>
+      </div>
+
+      <div class="auth-forms">
+
+        <!-- LOGIN FORM -->
+        <form id="login-form" class="auth-form active" novalidate>
+          <div class="form-group">
+            <label for="l-email">Email</label>
+            <input type="email" id="l-email" placeholder="example@email.com" autocomplete="email" required>
+          </div>
+          <div class="form-group">
+            <label for="l-pass">Mật khẩu</label>
+            <div class="pass-wrap">
+              <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" required>
+              <button type="button" class="pass-toggle" data-target="l-pass" title="Hiện/ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-auth btn-login">🌿 Vào cửa hàng</button>
+          <p class="auth-note">Chưa có tài khoản? <a href="#" id="go-register">Đăng ký ngay</a></p>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="register-form" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="r-name">Họ tên</label>
+            <input type="text" id="r-name" placeholder="Nguyễn Văn A" autocomplete="name" required>
+          </div>
+          <div class="form-group">
+            <label for="r-email">Email</label>
+            <input type="email" id="r-email" placeholder="example@email.com" autocomplete="email" required>
+          </div>
+          <div class="form-group">
+            <label for="r-pass">Mật khẩu</label>
+            <div class="pass-wrap">
+              <input type="password" id="r-pass" placeholder="Ít nhất 6 ký tự" autocomplete="new-password" required>
+              <button type="button" class="pass-toggle" data-target="r-pass" title="Hiện/ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="r-confirm">Xác nhận mật khẩu</label>
+            <div class="pass-wrap">
+              <input type="password" id="r-confirm" placeholder="Nhập lại mật khẩu" autocomplete="new-password" required>
+              <button type="button" class="pass-toggle" data-target="r-confirm" title="Hiện/ẩn mật khẩu">👁</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-auth btn-register">✅ Tạo tài khoản</button>
+          <p class="auth-note">Đã có tài khoản? <a href="#" id="go-login">Đăng nhập</a></p>
+        </form>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p>© 2025 <strong>EcoShop</strong> — Vì một Việt Nam xanh hơn 🌱</p>
+  </footer>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>
