@@ -2,6 +2,7 @@
 import { getProducts, getCertifications } from './api.js';
 import { formatPrice, badgeHTML, debounce, escHtml, getProductImage } from './utils.js';
 import { getCurrentUser, logout } from './auth.js';
+import { addToCart, initCart } from './cart.js';
 
 let allProducts  = [];
 let allCerts     = {};
@@ -35,13 +36,12 @@ function initHeader() {
 // ── Bootstrap ─────────────────────────────────────────────
 async function init() {
   initHeader();
+  initCart();
   bindSearch();
-  bindOrder();
 
   showSkeletons(8);
 
   try {
-    // Fetch song song — api.js cache sẵn, lần sau trả ngay
     const [products, certs] = await Promise.all([getProducts(), getCertifications()]);
     applyData(products, certs);
   } catch {
@@ -109,45 +109,6 @@ function bindSearch() {
     ?.addEventListener('click', applyFilters);
 }
 
-// ── Order ─────────────────────────────────────────────────
-function bindOrder() {
-  document.addEventListener('click', e => {
-    if (e.target.closest('.btn-order')) {
-      openOrderModal(e.target.closest('.product-card')?.dataset.name ?? '');
-    }
-  });
-  document.getElementById('order-close')
-    ?.addEventListener('click', closeOrderModal);
-  document.querySelector('.modal-cancel')
-    ?.addEventListener('click', closeOrderModal);
-  document.getElementById('order-form')
-    ?.addEventListener('submit', handleOrder);
-}
-
-function openOrderModal(name) {
-  document.getElementById('order-product-name').textContent = name;
-  document.getElementById('order-modal').classList.add('active');
-}
-function closeOrderModal() {
-  document.getElementById('order-modal').classList.remove('active');
-  document.getElementById('order-form')?.reset();
-}
-function handleOrder(e) {
-  e.preventDefault();
-  if (!getCurrentUser()) { closeOrderModal(); window.location.href = 'auth.html'; return; }
-  const name    = document.getElementById('order-name').value.trim();
-  const phone   = document.getElementById('order-phone').value.trim();
-  const product = document.getElementById('order-product-name').textContent;
-  if (!name || !phone) return;
-  closeOrderModal();
-  const el = document.getElementById('success-msg');
-  if (el) {
-    el.textContent = `Cảm ơn ${name}! Đơn hàng "${product}" đã được ghi nhận.`;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 4000);
-  }
-}
-
 // ── Render ────────────────────────────────────────────────
 function applyFilters() {
   const q = (document.getElementById('search-input')?.value ?? '').toLowerCase().trim();
@@ -172,7 +133,7 @@ function renderProducts(list) {
     const cert   = allCerts[p.certificationId];
     const imgSrc = getProductImage(p.name, p.image);
     return `
-      <article class="product-card" data-name="${escHtml(p.name)}">
+      <article class="product-card" data-id="${escHtml(p.id)}" data-name="${escHtml(p.name)}" onclick="if(!event.target.closest('.btn-add-cart'))window.location.href='product.html?id=${escHtml(p.id)}'">
         <div class="card-img-wrap">
           <img src="${escHtml(imgSrc)}" alt="${escHtml(p.name)}"
                loading="lazy" decoding="async" width="640" height="480"
@@ -185,11 +146,36 @@ function renderProducts(list) {
           <p class="card-desc">${escHtml(p.description ?? '')}</p>
           <div class="card-footer">
             <span class="card-price">${formatPrice(p.price)}</span>
-            <button class="btn-order">Đặt hàng</button>
+            <button class="btn-add-cart"
+              data-id="${escHtml(p.id)}"
+              data-name="${escHtml(p.name)}"
+              data-price="${escHtml(String(p.price))}"
+              data-img="${escHtml(imgSrc)}">
+              🛒 Thêm vào giỏ
+            </button>
           </div>
         </div>
       </article>`;
   }).join('');
+
+  // Bind add to cart
+  grid.querySelectorAll('.btn-add-cart').forEach(btn => {
+    btn.addEventListener('click', () => {
+      addToCart({
+        id:     btn.dataset.id,
+        name:   btn.dataset.name,
+        price:  btn.dataset.price,
+        imgSrc: btn.dataset.img,
+      });
+      // Hiệu ứng feedback
+      btn.textContent = '✅ Đã thêm!';
+      btn.style.background = 'var(--green-700)';
+      setTimeout(() => {
+        btn.textContent = '🛒 Thêm vào giỏ';
+        btn.style.background = '';
+      }, 1200);
+    });
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

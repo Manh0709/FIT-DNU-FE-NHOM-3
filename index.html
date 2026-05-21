@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EcoShop — Sản phẩm hữu cơ & thân thiện môi trường</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 </head>
@@ -19,7 +23,11 @@
         <a href="auth.html" class="nav-login-link">Đăng nhập</a>
         <a href="auth.html?tab=register" class="nav-register-link">Đăng ký</a>
       </div>
-      <!-- main.js inject badge user + nút đăng xuất vào đây khi đã login -->
+      <!-- Giỏ hàng -->
+      <button class="cart-icon-btn" id="cart-icon-btn" aria-label="Giỏ hàng">
+        🛒
+        <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+      </button>
     </nav>
   </header>
 
@@ -59,34 +67,24 @@
     </div>
   </section>
 
-  <!-- ORDER MODAL -->
-  <div id="order-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="order-title">
-    <div class="modal-box">
+  <!-- GIỎ HÀNG MODAL -->
+  <div id="cart-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <div class="modal-box cart-modal-box">
       <div class="modal-header">
-        <h3 id="order-title">Đặt hàng</h3>
-        <button id="order-close" class="modal-close" aria-label="Đóng">✕</button>
+        <h3 id="cart-title">🛒 Giỏ hàng của bạn</h3>
+        <button id="cart-close" class="modal-close" aria-label="Đóng">✕</button>
       </div>
-      <p style="margin-bottom:18px;color:var(--text-mid);">
-        Sản phẩm: <strong id="order-product-name" style="color:var(--green-700)"></strong>
-      </p>
-      <form id="order-form" novalidate>
-        <div class="form-group">
-          <label for="order-name">Họ tên</label>
-          <input id="order-name" type="text" placeholder="Nguyễn Văn A" required>
+      <div id="cart-body" class="cart-body"></div>
+      <div id="cart-footer" class="cart-footer" style="display:none">
+        <div class="cart-total-row">
+          <span>Tổng cộng:</span>
+          <strong id="cart-total" class="cart-total-amount">0 ₫</strong>
         </div>
-        <div class="form-group">
-          <label for="order-phone">Số điện thoại</label>
-          <input id="order-phone" type="tel" placeholder="0912 345 678" required>
+        <div class="cart-actions">
+          <button id="cart-clear" class="btn-secondary">🗑️ Xóa tất cả</button>
+          <button class="btn-primary" onclick="window.location.href='auth.html'">✅ Đặt hàng</button>
         </div>
-        <div class="form-group">
-          <label for="order-address">Địa chỉ giao hàng</label>
-          <input id="order-address" type="text" placeholder="Số nhà, đường, quận, thành phố">
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn-secondary modal-cancel">Hủy</button>
-          <button type="submit" class="btn-primary">🛒 Xác nhận đặt hàng</button>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 

@@ -4,104 +4,607 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đăng nhập — EcoShop</title>
-  <!-- Preconnect để giảm latency font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Non-blocking font load: media=print rồi swap sang all -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --forest:    #0d2b1d;
+      --moss:      #1a4a30;
+      --fern:      #2e7d52;
+      --leaf:      #3a9e68;
+      --mint:      #85d9a8;
+      --cream:     #f5f0e8;
+      --sand:      #ede7d9;
+      --bark:      #8c7355;
+      --text:      #1a2e22;
+      --muted:     #5a7a65;
+      --white:     #ffffff;
+      --r:         16px;
+      --t:         0.3s cubic-bezier(.4,0,.2,1);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+    }
+
+    /* ── Page layout ── */
+    .auth-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── Left panel — illustration side ── */
+    .auth-mural {
+      position: relative;
+      background: var(--forest);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 56px 52px;
+    }
+
+    /* Animated organic leaf shapes */
+    .mural-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .mural-bg svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .leaf-shape {
+      transform-origin: center;
+      animation: sway 8s ease-in-out infinite;
+    }
+    .leaf-shape:nth-child(2) { animation-delay: -2s; animation-duration: 11s; }
+    .leaf-shape:nth-child(3) { animation-delay: -5s; animation-duration: 9s; }
+    .leaf-shape:nth-child(4) { animation-delay: -3s; animation-duration: 13s; }
+    @keyframes sway {
+      0%,100% { transform: rotate(0deg) scale(1); }
+      33%      { transform: rotate(3deg) scale(1.02); }
+      66%      { transform: rotate(-2deg) scale(0.98); }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--mint);
+      opacity: 0;
+      animation: float-up 12s ease-in-out infinite;
+    }
+    @keyframes float-up {
+      0%   { opacity: 0; transform: translateY(0) scale(0); }
+      10%  { opacity: 0.4; }
+      90%  { opacity: 0.1; }
+      100% { opacity: 0; transform: translateY(-80vh) scale(1.5); }
+    }
+
+    .mural-logo {
+      position: relative;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .mural-logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--fern), var(--leaf));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .mural-logo span { color: var(--mint); }
+
+    .mural-headline {
+      position: relative;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 400;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+    .mural-headline em {
+      font-style: italic;
+      color: var(--mint);
+    }
+
+    .mural-sub {
+      position: relative;
+      font-size: 0.88rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.7;
+      max-width: 320px;
+    }
+
+    .mural-badges {
+      position: relative;
+      display: flex;
+      gap: 10px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+    .mural-badge {
+      padding: 6px 14px;
+      border: 1px solid rgba(133,217,168,0.3);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--mint);
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Right panel — form side ── */
+    .auth-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 48px;
+      background: var(--cream);
+      position: relative;
+    }
+
+    /* Subtle top-right nav */
+    .auth-nav {
+      position: absolute;
+      top: 28px; right: 36px;
+    }
+    .auth-nav a {
+      font-size: 0.84rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1.5px solid var(--sand);
+      border-radius: 20px;
+      transition: all var(--t);
+      font-weight: 400;
+    }
+    .auth-nav a:hover {
+      border-color: var(--fern);
+      color: var(--fern);
+    }
+
+    .auth-form-wrap {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* Tab switcher — pill style */
+    .tab-switcher {
+      display: flex;
+      background: var(--sand);
+      border-radius: 40px;
+      padding: 4px;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .tab-pill {
+      flex: 1;
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      border-radius: 36px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      transition: color var(--t);
+    }
+    .tab-pill.active { color: var(--forest); }
+    /* Sliding indicator */
+    .tab-indicator {
+      position: absolute;
+      top: 4px; left: 4px;
+      width: calc(50% - 4px);
+      height: calc(100% - 8px);
+      background: var(--white);
+      border-radius: 36px;
+      box-shadow: 0 2px 12px rgba(13,43,29,0.1);
+      transition: transform var(--t);
+    }
+    .tab-indicator.right { transform: translateX(calc(100% + 0px)); }
+
+    /* Form heading */
+    .form-heading {
+      margin-bottom: 28px;
+    }
+    .form-heading h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--forest);
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .form-heading p {
+      font-size: 0.84rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ── Form fields ── */
+    .auth-form { display: none; }
+    .auth-form.active { display: block; animation: fade-in 0.3s ease; }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .field-wrap {
+      position: relative;
+    }
+    .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    .field input {
+      width: 100%;
+      padding: 13px 14px 13px 40px;
+      background: var(--white);
+      border: 1.5px solid var(--sand);
+      border-radius: var(--r);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+    .field input:focus {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 4px rgba(58,158,104,0.12);
+    }
+    .field input::placeholder { color: #b0bdb5; }
+
+    /* Password toggle */
+    .pass-toggle {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      cursor: pointer; font-size: 1rem;
+      color: var(--muted); opacity: 0.6;
+      padding: 4px;
+      transition: opacity var(--t);
+    }
+    .pass-toggle:hover { opacity: 1; }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      background: var(--forest);
+      color: var(--white);
+      border: none;
+      border-radius: var(--r);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background var(--t), transform var(--t);
+      letter-spacing: 0.02em;
+    }
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--fern), var(--leaf));
+      opacity: 0;
+      transition: opacity var(--t);
+    }
+    .btn-submit:hover { transform: translateY(-1px); }
+    .btn-submit:hover::before { opacity: 1; }
+    .btn-submit:active { transform: translateY(0) scale(0.99); }
+    .btn-submit span { position: relative; z-index: 1; }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Switch link */
+    .switch-line {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .switch-line a {
+      color: var(--fern);
+      font-weight: 500;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--t);
+    }
+    .switch-line a:hover { border-color: var(--fern); }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      opacity: 0.5;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--sand);
+    }
+
+    /* ── Toast ── */
+    #toast-container {
+      position: fixed; bottom: 28px; right: 28px;
+      z-index: 9999;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: #fff;
+      background: var(--forest);
+      box-shadow: 0 8px 32px rgba(13,43,29,0.25);
+      opacity: 0;
+      transform: translateY(12px) scale(0.95);
+      transition: all 0.35s cubic-bezier(.34,1.56,.64,1);
+      min-width: 220px;
+    }
+    .toast.toast-error { background: #8b2020; }
+    .toast.show { opacity: 1; transform: none; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .auth-shell { grid-template-columns: 1fr; }
+      .auth-mural { display: none; }
+      .auth-panel { padding: 40px 24px; justify-content: flex-start; padding-top: 80px; }
+    }
+  </style>
 </head>
-<body class="auth-body-page">
+<body>
 
-  <!-- HEADER -->
-  <header class="site-header">
-    <div class="logo">🌿 <span>Eco</span>Shop</div>
-    <nav class="header-nav">
-      <a href="index.html">Cửa hàng</a>
-    </nav>
-  </header>
+<div class="auth-shell">
 
-  <!-- AUTH PAGE -->
-  <main class="auth-page">
-    <div class="auth-card">
+  <!-- ── Left: Illustration mural ── -->
+  <div class="auth-mural">
+    <div class="mural-bg">
+      <svg viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <!-- Deep background circles -->
+        <circle cx="480" cy="120" r="280" fill="#1a4a30" opacity="0.6"/>
+        <circle cx="80"  cy="700" r="220" fill="#1a4a30" opacity="0.4"/>
 
-      <!-- Brand strip -->
-      <div class="auth-brand">
-        <div class="auth-brand-icon">🌿</div>
-        <h1>EcoShop</h1>
-        <p>Sản phẩm hữu cơ · Thân thiện môi trường</p>
-      </div>
+        <!-- Large organic leaf 1 -->
+        <g class="leaf-shape">
+          <path d="M520,80 C580,200 560,380 420,460 C380,480 330,490 300,480 C340,400 400,300 380,180 C360,80 440,20 520,80Z"
+                fill="#2e7d52" opacity="0.55"/>
+        </g>
+        <!-- Leaf 2 -->
+        <g class="leaf-shape">
+          <path d="M-20,300 C60,260 180,280 220,380 C260,480 220,580 140,600 C80,560 20,480 -10,400 C-40,320 -20,300 -20,300Z"
+                fill="#246040" opacity="0.5"/>
+        </g>
+        <!-- Leaf 3 -->
+        <g class="leaf-shape">
+          <path d="M300,700 C380,660 460,680 490,760 C520,840 480,900 400,910 C320,880 280,820 290,760 C300,720 300,700 300,700Z"
+                fill="#3a9e68" opacity="0.35"/>
+        </g>
+        <!-- Leaf 4 — top left accent -->
+        <g class="leaf-shape">
+          <path d="M100,50 C160,10 240,40 250,120 C260,200 210,260 150,260 C100,240 70,180 80,120 C90,70 100,50 100,50Z"
+                fill="#55c485" opacity="0.2"/>
+        </g>
 
-      <!-- Admin hint -->
-      <div class="admin-hint">
-        <span>🛠️ Admin mặc định:</span>
-        <code>admin@ecoshop.vn</code> / <code>Admin@2025</code>
-      </div>
+        <!-- Delicate vein lines -->
+        <line x1="520" y1="80"  x2="360" y2="470" stroke="#85d9a8" stroke-width="0.8" opacity="0.2"/>
+        <line x1="490" y1="760" x2="300" y2="700" stroke="#85d9a8" stroke-width="0.8" opacity="0.15"/>
+        <line x1="-20" y1="300" x2="220" y2="380" stroke="#85d9a8" stroke-width="0.8" opacity="0.15"/>
+      </svg>
 
-      <!-- Tabs -->
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="login">Đăng nhập</button>
-        <button class="auth-tab" data-tab="register">Đăng ký</button>
-      </div>
-
-      <div class="auth-forms">
-
-        <!-- LOGIN FORM -->
-        <form id="login-form" class="auth-form active" novalidate>
-          <div class="form-group">
-            <label for="l-email">Email</label>
-            <input type="email" id="l-email" placeholder="example@email.com" autocomplete="email" required>
-          </div>
-          <div class="form-group">
-            <label for="l-pass">Mật khẩu</label>
-            <div class="pass-wrap">
-              <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" required>
-              <button type="button" class="pass-toggle" data-target="l-pass" title="Hiện/ẩn mật khẩu">👁</button>
-            </div>
-          </div>
-          <button type="submit" class="btn-auth btn-login">🌿 Vào cửa hàng</button>
-          <p class="auth-note">Chưa có tài khoản? <a href="#" id="go-register">Đăng ký ngay</a></p>
-        </form>
-
-        <!-- REGISTER FORM -->
-        <form id="register-form" class="auth-form" novalidate>
-          <div class="form-group">
-            <label for="r-name">Họ tên</label>
-            <input type="text" id="r-name" placeholder="Nguyễn Văn A" autocomplete="name" required>
-          </div>
-          <div class="form-group">
-            <label for="r-email">Email</label>
-            <input type="email" id="r-email" placeholder="example@email.com" autocomplete="email" required>
-          </div>
-          <div class="form-group">
-            <label for="r-pass">Mật khẩu</label>
-            <div class="pass-wrap">
-              <input type="password" id="r-pass" placeholder="Ít nhất 6 ký tự" autocomplete="new-password" required>
-              <button type="button" class="pass-toggle" data-target="r-pass" title="Hiện/ẩn mật khẩu">👁</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="r-confirm">Xác nhận mật khẩu</label>
-            <div class="pass-wrap">
-              <input type="password" id="r-confirm" placeholder="Nhập lại mật khẩu" autocomplete="new-password" required>
-              <button type="button" class="pass-toggle" data-target="r-confirm" title="Hiện/ẩn mật khẩu">👁</button>
-            </div>
-          </div>
-          <button type="submit" class="btn-auth btn-register">✅ Tạo tài khoản</button>
-          <p class="auth-note">Đã có tài khoản? <a href="#" id="go-login">Đăng nhập</a></p>
-        </form>
-
-      </div>
+      <!-- Floating particles -->
+      <div class="particle" style="width:4px;height:4px;left:20%;bottom:10%;animation-delay:0s;animation-duration:14s"></div>
+      <div class="particle" style="width:3px;height:3px;left:45%;bottom:5%;animation-delay:-4s;animation-duration:11s"></div>
+      <div class="particle" style="width:5px;height:5px;left:70%;bottom:15%;animation-delay:-8s;animation-duration:16s"></div>
+      <div class="particle" style="width:2px;height:2px;left:35%;bottom:20%;animation-delay:-2s;animation-duration:12s"></div>
+      <div class="particle" style="width:3px;height:3px;left:60%;bottom:8%;animation-delay:-6s;animation-duration:18s"></div>
     </div>
-  </main>
 
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <p>© 2025 <strong>EcoShop</strong> — Vì một Việt Nam xanh hơn 🌱</p>
-  </footer>
+    <!-- Content -->
+    <div class="mural-logo">
+      <div class="mural-logo-icon">🌿</div>
+      <div>Eco<span>Shop</span></div>
+    </div>
 
-  <script type="module" src="js/auth.js"></script>
+    <h2 class="mural-headline">
+      Sống xanh<br>bắt đầu từ<br><em>những điều nhỏ</em>
+    </h2>
+
+    <p class="mural-sub">
+      Sản phẩm hữu cơ, chứng nhận rõ ràng, nguồn gốc minh bạch — cho một Việt Nam xanh hơn mỗi ngày.
+    </p>
+
+    <div class="mural-badges">
+      <span class="mural-badge">🌱 Hữu cơ</span>
+      <span class="mural-badge">♻️ Tái chế</span>
+      <span class="mural-badge">🤝 Công bằng</span>
+    </div>
+  </div>
+
+  <!-- ── Right: Form panel ── -->
+  <div class="auth-panel">
+    <nav class="auth-nav">
+      <a href="index.html">← Cửa hàng</a>
+    </nav>
+
+    <div class="auth-form-wrap">
+
+      <!-- Tab switcher -->
+      <div class="tab-switcher" role="tablist">
+        <div class="tab-indicator" id="tab-indicator"></div>
+        <button class="tab-pill active" data-tab="login"    role="tab" aria-selected="true">Đăng nhập</button>
+        <button class="tab-pill"        data-tab="register" role="tab" aria-selected="false">Đăng ký</button>
+      </div>
+
+      <!-- ── Login form ── -->
+      <div id="login-form" class="auth-form active">
+        <div class="form-heading">
+          <h1>Chào mừng trở lại</h1>
+          <p>Đăng nhập để tiếp tục mua sắm xanh</p>
+        </div>
+
+        <div class="field">
+          <label for="l-email">Email</label>
+          <div class="field-wrap">
+            <span class="field-icon">✉️</span>
+            <input type="email" id="l-email" placeholder="admin@gmail.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="l-pass">Mật khẩu</label>
+          <div class="field-wrap">
+            <span class="field-icon">🔒</span>
+            <input type="password" id="l-pass" placeholder="Mật khẩu của bạn" autocomplete="current-password">
+            <button type="button" class="pass-toggle" data-target="l-pass" aria-label="Hiện mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <button type="button" id="btn-login-submit" class="btn-submit">
+          <span>Vào cửa hàng →</span>
+        </button>
+
+        <p class="switch-line">Chưa có tài khoản? <a href="#" id="go-register">Đăng ký ngay</a></p>
+      </div>
+
+      <!-- ── Register form ── -->
+      <div id="register-form" class="auth-form">
+        <div class="form-heading">
+          <h1>Tạo tài khoản</h1>
+          <p>Tham gia cộng đồng xanh của EcoShop</p>
+        </div>
+
+        <div class="field">
+          <label for="r-name">Họ và tên</label>
+          <div class="field-wrap">
+            <span class="field-icon">👤</span>
+            <input type="text" id="r-name" placeholder="Nguyễn Văn A" autocomplete="name">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="r-email">Email</label>
+          <div class="field-wrap">
+            <span class="field-icon">✉️</span>
+            <input type="email" id="r-email" placeholder="example@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="r-pass">Mật khẩu</label>
+          <div class="field-wrap">
+            <span class="field-icon">🔒</span>
+            <input type="password" id="r-pass" placeholder="Ít nhất 6 ký tự" autocomplete="new-password">
+            <button type="button" class="pass-toggle" data-target="r-pass" aria-label="Hiện mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="r-confirm">Xác nhận mật khẩu</label>
+          <div class="field-wrap">
+            <span class="field-icon">🔒</span>
+            <input type="password" id="r-confirm" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
+            <button type="button" class="pass-toggle" data-target="r-confirm" aria-label="Hiện mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <button type="button" id="btn-register-submit" class="btn-submit">
+          <span>Tạo tài khoản →</span>
+        </button>
+
+        <p class="switch-line">Đã có tài khoản? <a href="#" id="go-login">Đăng nhập</a></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/auth.js"></script>
+<script>
+  // Tab switching with sliding pill indicator
+  const indicator = document.getElementById('tab-indicator');
+  function switchTab(type) {
+    document.querySelectorAll('.tab-pill').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === type);
+      t.setAttribute('aria-selected', t.dataset.tab === type);
+    });
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    document.getElementById(`${type}-form`)?.classList.add('active');
+    indicator.classList.toggle('right', type === 'register');
+
+    // Update heading based on tab
+  }
+
+  document.querySelectorAll('.tab-pill').forEach(btn =>
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab))
+  );
+  document.getElementById('go-register')?.addEventListener('click', e => { e.preventDefault(); switchTab('register'); });
+  document.getElementById('go-login')?.addEventListener('click',    e => { e.preventDefault(); switchTab('login'); });
+
+  // Password toggle
+  document.querySelectorAll('.pass-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      btn.textContent = isPass ? '🙈' : '👁️';
+    });
+  });
+
+  // Tab from URL
+  if (new URLSearchParams(location.search).get('tab') === 'register') switchTab('register');
+</script>
 </body>
 </html>

@@ -1,130 +1,133 @@
-// auth.js — Authentication logic for EcoShop
-import { getUsers, getUsersByEmail, registerUser } from './api.js';
-import { showToast } from './utils.js';
+// auth.js — Module chuẩn ES, export đầy đủ cho các file khác import
 
-const STORAGE_KEY = 'ecoshop_currentUser';
+const STORAGE_KEY  = 'ecoshop_currentUser';
+const USERS_DB_KEY = 'ecoshop_local_users';
 
-// ── Session helpers ───────────────────────────────────────
+// ── Khởi tạo DB mặc định ──────────────────────────────────
+function initDatabase() {
+  if (!localStorage.getItem(USERS_DB_KEY)) {
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify([
+      { id: '1', name: 'Quản trị viên', email: 'admin@gmail.com', password: 'adminpassword', role: 'admin' },
+      { id: '2', name: 'Người dùng Eco', email: 'user@gmail.com',  password: 'userpassword',  role: 'user'  },
+    ]));
+  }
+}
+initDatabase();
+
+// ── Helpers dùng chung ────────────────────────────────────
 export function getCurrentUser() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; }
   catch { return null; }
 }
-export function setCurrentUser(user) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-}
+
 export function logout() {
   localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem('eco_products');
-  localStorage.removeItem('eco_certs');
-  window.location.replace('auth.html');
+  window.location.href = 'auth.html';
 }
 
-// Guard chỉ dùng cho admin.html
+/**
+ * Kiểm tra auth — dùng trong admin.js / header.js
+ * Nếu chưa đăng nhập hoặc không đủ quyền → redirect về auth.html
+ */
 export function requireAuth(requireAdmin = false) {
   const user = getCurrentUser();
-  if (!user) {
-    // Chỉ redirect nếu đang KHÔNG ở auth.html
-    if (!window.location.pathname.includes('auth')) {
-      window.location.replace('auth.html');
-    }
-    return null;
-  }
-  if (requireAdmin && user.role !== 'admin') {
-    showToast('Bạn không có quyền truy cập!', 'error');
-    setTimeout(() => { window.location.replace('index.html'); }, 1200);
-    return null;
-  }
+  if (!user) { window.location.replace('auth.html'); return null; }
+  if (requireAdmin && user.role !== 'admin') { window.location.replace('index.html'); return null; }
   return user;
+}
+
+// ── Toast (dùng nội bộ cho trang auth) ───────────────────
+function showLocalToast(message, type = 'success') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 2500);
 }
 
 // ── Tab switching ─────────────────────────────────────────
 function switchTab(type) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-  document.querySelectorAll('.auth-tab')[type === 'login' ? 0 : 1]?.classList.add('active');
+  const tabs = document.querySelectorAll('.auth-tab');
+  if (type === 'login'    && tabs[0]) tabs[0].classList.add('active');
+  if (type === 'register' && tabs[1]) tabs[1].classList.add('active');
   document.getElementById(`${type}-form`)?.classList.add('active');
 }
 
-// ── Password toggle ───────────────────────────────────────
-function bindPasswordToggles() {
-  document.querySelectorAll('.pass-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById(btn.dataset.target);
-      if (!input) return;
-      const show = input.type === 'password';
-      input.type = show ? 'text' : 'password';
-      btn.textContent = show ? '🙈' : '👁';
-    });
-  });
+// ── Đăng nhập ─────────────────────────────────────────────
+function doLogin() {
+  const email    = document.getElementById('l-email').value.trim().toLowerCase();
+  const password = document.getElementById('l-pass').value;
+  if (!email || !password) { showLocalToast('Vui lòng nhập đầy đủ Email và Mật khẩu!', 'error'); return; }
+
+  const btn = document.getElementById('btn-login-submit');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang đăng nhập...'; }
+
+  const users = JSON.parse(localStorage.getItem(USERS_DB_KEY)) || [];
+  const user  = users.find(u => u.email === email && u.password === password);
+
+  if (!user) {
+    showLocalToast('Email hoặc mật khẩu không chính xác!', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Vào cửa hàng'; }
+    return;
+  }
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  showLocalToast('Đăng nhập thành công! Đang chuyển hướng... 🌿');
+  // Dùng replace để không lưu auth.html vào history → tránh back về trang login
+  setTimeout(() => window.location.replace(user.role === 'admin' ? 'admin.html' : 'index.html'), 400);
 }
 
-// ── Register ──────────────────────────────────────────────
-async function handleRegister(e) {
-  e.preventDefault();
+// ── Đăng ký ───────────────────────────────────────────────
+function doRegister() {
   const name     = document.getElementById('r-name').value.trim();
   const email    = document.getElementById('r-email').value.trim().toLowerCase();
   const password = document.getElementById('r-pass').value;
   const confirm  = document.getElementById('r-confirm').value;
 
-  if (!name)                return showToast('Vui lòng nhập họ tên!', 'error');
-  if (password.length < 6)  return showToast('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
-  if (password !== confirm)  return showToast('Mật khẩu xác nhận không khớp!', 'error');
+  if (!name || !email || !password) { showLocalToast('Vui lòng điền toàn bộ thông tin!', 'error'); return; }
+  if (password !== confirm)         { showLocalToast('Mật khẩu xác nhận không trùng khớp!', 'error'); return; }
+  if (password.length < 6)          { showLocalToast('Mật khẩu phải ít nhất 6 ký tự!', 'error'); return; }
 
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.disabled = true; btn.textContent = 'Đang xử lý…';
-  try {
-    const users = await getUsers();
-    if (users.some(u => u.email?.toLowerCase() === email))
-      return showToast('Email này đã được đăng ký!', 'error');
-    await registerUser({ name, email, password, role: 'user' });
-    showToast('Đăng ký thành công! Vui lòng đăng nhập.');
-    e.target.reset();
-    switchTab('login');
-    document.getElementById('l-email').value = email;
-  } catch { showToast('Lỗi server, vui lòng thử lại!', 'error'); }
-  finally { btn.disabled = false; btn.textContent = 'Tạo tài khoản'; }
+  const users = JSON.parse(localStorage.getItem(USERS_DB_KEY)) || [];
+  if (users.some(u => u.email === email)) { showLocalToast('Email này đã được đăng ký rồi!', 'error'); return; }
+
+  users.push({ id: String(Date.now()), name, email, password, role: 'user' });
+  localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
+  showLocalToast('Tạo tài khoản thành công! Xin mời đăng nhập.');
+  switchTab('login');
+  document.getElementById('l-email').value = email;
 }
 
-// ── Login ─────────────────────────────────────────────────
-async function handleLogin(e) {
-  e.preventDefault();
-  const email    = document.getElementById('l-email').value.trim().toLowerCase();
-  const password = document.getElementById('l-pass').value;
+// ── Init trang auth (chỉ chạy nếu có form đăng nhập) ─────
+document.addEventListener('DOMContentLoaded', () => {
+  // Chỉ chạy logic auth nếu đang ở auth.html
+  if (!document.getElementById('btn-login-submit')) return;
 
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.disabled = true; btn.textContent = 'Đang kiểm tra…';
-  try {
-    // Tìm theo email để tránh fetch toàn bộ danh sách
-    const users = await getUsersByEmail(email);
-    const user  = users.find(u => u.email?.toLowerCase() === email && u.password === password);
-    if (!user) return showToast('Email hoặc mật khẩu không đúng!', 'error');
-    setCurrentUser(user);
-    showToast(`Chào mừng, ${user.name || user.email}! 🌿`);
-    setTimeout(() => {
-      window.location.replace(user.role === 'admin' ? 'admin.html' : 'index.html');
-    }, 800);
-  } catch { showToast('Lỗi đăng nhập, vui lòng thử lại!', 'error'); }
-  finally { btn.disabled = false; btn.textContent = 'Vào cửa hàng'; }
-}
-
-// ── Init (chỉ chạy trên auth.html) ───────────────────────
-async function init() {
-  const user = getCurrentUser();
-  if (user) {
-    window.location.replace(user.role === 'admin' ? 'admin.html' : 'index.html');
+  // Nếu đã đăng nhập → đá thẳng ra trang phù hợp
+  const current = getCurrentUser();
+  if (current) {
+    window.location.replace(current.role === 'admin' ? 'admin.html' : 'index.html');
     return;
   }
 
-  document.querySelectorAll('.auth-tab').forEach(btn =>
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  document.getElementById('btn-login-submit').onclick    = doLogin;
+  document.getElementById('btn-register-submit').onclick = doRegister;
+
+  document.querySelectorAll('.auth-tab').forEach(btn => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
+  });
   document.getElementById('go-register')?.addEventListener('click', e => { e.preventDefault(); switchTab('register'); });
   document.getElementById('go-login')?.addEventListener('click',    e => { e.preventDefault(); switchTab('login'); });
-  document.getElementById('register-form')?.addEventListener('submit', handleRegister);
-  document.getElementById('login-form')?.addEventListener('submit',    handleLogin);
-  bindPasswordToggles();
 
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('tab') === 'register') switchTab('register');
-}
-
-document.addEventListener('DOMContentLoaded', () => { init(); });
+  // Hỗ trợ query string ?tab=register
+  if (new URLSearchParams(location.search).get('tab') === 'register') switchTab('register');
+});

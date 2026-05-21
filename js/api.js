@@ -4,11 +4,10 @@ const API = {
   products:       'https://6a06d7ccc83ba8ad9b3df75f.mockapi.io/api/v1/products',
   suppliers:      'https://6a06d7ccc83ba8ad9b3df75f.mockapi.io/api/v1/suppliers',
   certifications: 'https://69fc38acfce564e2591784fc.mockapi.io/api/v1/certifications',
-  users:          'https://69fc38acfce564e2591784fc.mockapi.io/api/v1/user',
 };
 
-const TTL         = 10 * 60_000; // cache data 10 phút
-const BACKOFF_TTL = 60_000;      // nếu bị 429, chờ 60 giây trước khi thử lại
+const TTL         = 10 * 60_000; 
+const BACKOFF_TTL = 60_000;      
 const LS_PREFIX   = 'eco_';
 const QUEUE_GAP   = 150;
 
@@ -40,8 +39,8 @@ export function lsClear(url) {
   } catch {}
 }
 
-// ── 429 backoff tracker (in-memory, reset khi reload) ─────
-const _blocked = new Map(); // url → timestamp bị block
+// ── 429 backoff tracker ───────────────────────────────────
+const _blocked = new Map();
 
 function isBlocked(url) {
   const ts = _blocked.get(url);
@@ -53,7 +52,7 @@ function setBlocked(url) {
   _blocked.set(url, Date.now());
 }
 
-// ── Queue chỉ cho mutations ───────────────────────────────
+// ── Queue giải nghẽn ──────────────────────────────────────
 let _queue = Promise.resolve();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -63,30 +62,34 @@ function enqueue(fn) {
   return result;
 }
 
-// ── Fetch với exponential backoff ─────────────────────────
+// ── Fetch an toàn ─────────────────────────────────────────
 async function fetchWithRetry(url, options, isGet) {
-  // Nếu URL đang trong backoff period, trả lỗi ngay — không spam thêm
   if (isGet && isBlocked(url)) {
-    throw new Error('Đang chờ rate limit, thử lại sau.');
+    throw new Error('Hệ thống đang bận, vui lòng thử lại sau ít phút.');
   }
 
-  const delays = [0, 1500, 4000]; // 3 lần: ngay, 1.5s, 4s
-  for (let i = 0; i < delays.length; i++) {
-    if (delays[i] > 0) await sleep(delays[i]);
+  try {
     const res = await fetch(url, {
       headers: { 'Content-Type': 'application/json' },
       ...options,
     });
+
     if (res.status === 429) {
-      if (isGet) setBlocked(url); // đánh dấu block, không retry nữa
-      throw new Error('Quá nhiều request (429). Tự động thử lại sau 60 giây.');
+      if (isGet) setBlocked(url);
+      throw new Error('Server quá tải (429). Đang chuyển hướng dữ liệu an toàn.');
     }
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    if (!res.ok) {
+      throw new Error(`Lỗi HTTP ${res.status}`);
+    }
+
     const data = await res.json();
     if (isGet) lsSet(url, data);
     return data;
+
+  } catch (error) {
+    throw error;
   }
-  throw new Error('Không thể kết nối, thử lại sau.');
 }
 
 async function apiFetch(url, options = {}) {
@@ -124,11 +127,3 @@ export const getCertification    = id      => apiFetch(`${API.certifications}/${
 export const createCertification = d       => apiFetch(API.certifications, { method: 'POST', body: JSON.stringify(d) });
 export const updateCertification = (id, d) => apiFetch(`${API.certifications}/${id}`, { method: 'PUT', body: JSON.stringify(d) });
 export const deleteCertification = id      => apiFetch(`${API.certifications}/${id}`, { method: 'DELETE' });
-
-// ── Users ─────────────────────────────────────────────────
-export const getUsers        = ()      => apiFetch(API.users);
-export const getUsersByEmail = (email) => apiFetch(`${API.users}?email=${encodeURIComponent(email)}`);
-export const getUser         = id      => apiFetch(`${API.users}/${id}`);
-export const registerUser    = d       => apiFetch(API.users, { method: 'POST', body: JSON.stringify(d) });
-export const updateUser      = (id, d) => apiFetch(`${API.users}/${id}`, { method: 'PUT', body: JSON.stringify(d) });
-export const deleteUser      = id      => apiFetch(`${API.users}/${id}`, { method: 'DELETE' });
