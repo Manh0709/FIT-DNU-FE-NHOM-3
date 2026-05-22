@@ -4,16 +4,18 @@ import {
   getSuppliers, createSupplier, updateSupplier, deleteSupplier,
   getCertifications, createCertification, updateCertification, deleteCertification,
 } from './api.js';
+import { getOrders, updateOrderStatus, ORDER_STATUS } from './orders.js';
 import { formatPrice, showToast, escHtml, openModal, closeModal, getProductImage } from './utils.js';
 import { requireAuth, logout } from './auth.js';
 
 // ── State ─────────────────────────────────────────────────
 const state = {
-  products: [], suppliers: [], certifications: [],
+  products: [], suppliers: [], certifications: [], orders: [],
   editingId: null, activeTab: 'dashboard',
   loaded: { products: false, suppliers: false, certs: false },
   sort: { products: { col: null, dir: 1 }, suppliers: { col: null, dir: 1 } },
-  search: { products: '', suppliers: '', certs: '' },
+  search: { products: '', suppliers: '', certs: '', orders: '' },
+  orderStatusFilter: '',
 };
 
 // ── Auth ──────────────────────────────────────────────────
@@ -34,12 +36,14 @@ async function init() {
   bindSearch();
   bindImagePreview();
   bindExport();
+  bindOrderSearch();
 
   await loadAll();
 }
 
 async function loadAll() {
   await Promise.all([loadProducts(), loadSuppliers(), loadCertifications()]);
+  loadOrders();
   renderDashboard();
 }
 
@@ -49,6 +53,7 @@ const TAB_TITLES = {
   products:  '🌿 Sản phẩm',
   suppliers: '🏭 Nhà cung cấp',
   certs:     '🏆 Chứng nhận',
+  orders:    '📋 Đơn hàng',
 };
 
 function initSidebarNav() {
@@ -65,6 +70,7 @@ function switchTab(tab) {
   document.getElementById(`tab-${tab}`)?.classList.add('active');
   const titleEl = document.getElementById('topbar-title');
   if (titleEl) titleEl.textContent = TAB_TITLES[tab] || tab;
+  if (tab === 'orders') loadOrders();
 }
 
 // ── Load data ─────────────────────────────────────────────
@@ -104,9 +110,11 @@ function updateCounts() {
   const p = document.getElementById('count-products');
   const s = document.getElementById('count-suppliers');
   const c = document.getElementById('count-certs');
+  const o = document.getElementById('count-orders');
   if (p) p.textContent = state.products.length || '—';
   if (s) s.textContent = state.suppliers.length || '—';
   if (c) c.textContent = state.certifications.length || '—';
+  if (o) o.textContent = state.orders.length || '—';
 }
 
 // ── Dashboard ─────────────────────────────────────────────
@@ -120,6 +128,7 @@ function renderDashboard() {
     const avg = state.products.reduce((s,p) => s + Number(p.price), 0) / state.products.length;
     setValue('stat-avg-price', Math.round(avg).toLocaleString('vi-VN') + ' ₫');
   }
+  setValue('stat-orders', state.orders.length || 0);
 
   // Recent products
   const rp = document.getElementById('recent-products');
@@ -196,7 +205,7 @@ function renderProducts() {
     const cert = certMap[p.certificationId];
     const imgSrc = getProductImage(p.name, p.image);
     const badgeHtml = cert ? `<span class="badge badge-${cert.badgeColor}">★ ${escHtml(cert.name)}</span>` : '—';
-    return `<tr>
+    return `<tr class="product-row" data-id="${p.id}" style="cursor:pointer" title="Nhấn để xem chi tiết">
       <td><img src="${escHtml(imgSrc)}" class="thumb" alt="" data-preview="${escHtml(imgSrc)}"
                onerror="this.src='https://picsum.photos/seed/eco/80/60'"></td>
       <td class="td-name">${escHtml(p.name)}</td>
@@ -209,6 +218,15 @@ function renderProducts() {
       </td>
     </tr>`;
   }).join('');
+
+  // Click vào row → xem chi tiết (trừ nút edit/delete)
+  tbody.querySelectorAll('.product-row').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.actions')) return;
+      const p = state.products.find(x => String(x.id) === String(row.dataset.id));
+      if (p) openProductPreview(p);
+    });
+  });
 }
 
 // ── Render Suppliers ──────────────────────────────────────
@@ -398,7 +416,7 @@ function bindModals() {
 
   document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn =>
     btn.addEventListener('click', () => {
-      ['product-modal','supplier-modal','cert-modal','confirm-modal'].forEach(closeModal);
+      ['product-modal','supplier-modal','cert-modal','confirm-modal','product-preview-modal'].forEach(closeModal);
     })
   );
 
@@ -558,6 +576,119 @@ async function handleCertSave(e) {
     renderDashboard();
   } catch { showToast('Lỗi lưu chứng nhận', 'error'); }
   if (btn) { btn.disabled = false; btn.textContent = '💾 Lưu'; }
+}
+
+
+// ── Orders ────────────────────────────────────────────────
+function loadOrders() {
+  state.orders = getOrders();
+  renderOrders();
+  updateCounts();
+  // Cập nhật dashboard
+  setValue('stat-orders', state.orders.length || 0);
+}
+
+function renderOrders() {
+  const tbody = document.querySelector('#orders-table tbody');
+  if (!tbody) return;
+
+  let list = [...state.orders];
+
+  const q = state.search.orders.toLowerCase().trim();
+  if (q) list = list.filter(o =>
+    o.userName?.toLowerCase().includes(q) ||
+    o.userEmail?.toLowerCase().includes(q) ||
+    o.phone?.includes(q) ||
+    o.address?.toLowerCase().includes(q) ||
+    o.id?.toLowerCase().includes(q));
+
+  if (state.orderStatusFilter)
+    list = list.filter(o => o.status === state.orderStatusFilter);
+
+  const footer = document.getElementById('orders-footer');
+  if (footer) footer.textContent = `${list.length} / ${state.orders.length} đơn hàng`;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-row">
+      <div class="empty-row-inner"><div class="empty-icon">📋</div>
+      <div>Không có đơn hàng nào.</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(o => {
+    const st   = ORDER_STATUS[o.status] || ORDER_STATUS.pending;
+    const date = new Date(o.createdAt).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const items = (o.items || []).map(i => `${i.name} ×${i.qty}`).join(', ');
+    return `<tr>
+      <td style="font-weight:600;color:var(--green-800);font-size:.8rem">${escHtml(o.id)}</td>
+      <td>
+        <div style="font-weight:600">${escHtml(o.userName || '')}</div>
+        <div style="font-size:.78rem;color:var(--text-light)">${escHtml(o.userEmail || '')}</div>
+      </td>
+      <td style="white-space:nowrap">${escHtml(o.phone || '')}</td>
+      <td style="max-width:160px;font-size:.82rem">${escHtml(o.address || '')}</td>
+      <td class="order-items-list" style="max-width:180px;font-size:.8rem">${escHtml(items)}</td>
+      <td style="font-weight:700;color:var(--green-700);white-space:nowrap">${Number(o.total).toLocaleString('vi-VN')} ₫</td>
+      <td>
+        <select class="status-select order-status-sel" data-id="${escHtml(o.id)}">
+          <option value="pending"   ${o.status==='pending'  ?'selected':''}>⏳ Chờ xử lý</option>
+          <option value="shipping"  ${o.status==='shipping' ?'selected':''}>🚚 Đang giao</option>
+          <option value="completed" ${o.status==='completed'?'selected':''}>✅ Hoàn thành</option>
+        </select>
+      </td>
+      <td style="white-space:nowrap;font-size:.8rem;color:var(--text-light)">${date}</td>
+    </tr>`;
+  }).join('');
+
+  // Bind status change
+  tbody.querySelectorAll('.order-status-sel').forEach(sel => {
+    sel.addEventListener('change', () => {
+      updateOrderStatus(sel.dataset.id, sel.value);
+      loadOrders();
+      showToast('✅ Đã cập nhật trạng thái đơn hàng!');
+    });
+  });
+}
+
+function bindOrderSearch() {
+  document.getElementById('search-orders')?.addEventListener('input', e => {
+    state.search.orders = e.target.value;
+    renderOrders();
+  });
+  document.getElementById('filter-order-status')?.addEventListener('change', e => {
+    state.orderStatusFilter = e.target.value;
+    renderOrders();
+  });
+}
+
+// Load orders khi chuyển tab
+const _origSwitchTab = switchTab;
+// Patch: reload orders khi vào tab orders
+// ── Product Preview Modal ─────────────────────────────────
+function openProductPreview(p) {
+  const cert   = state.certifications.find(c => String(c.id) === String(p.certificationId));
+  const imgSrc = getProductImage(p.name, p.image);
+  const badgeHtml = cert
+    ? `<span class="badge badge-${cert.badgeColor}">★ ${escHtml(cert.name)}</span>`
+    : '<span style="color:var(--text-light);font-size:.82rem">Chưa có chứng nhận</span>';
+
+  document.getElementById('pv-img').src               = imgSrc;
+  document.getElementById('pv-img').alt               = p.name;
+  document.getElementById('pv-name').textContent      = p.name;
+  document.getElementById('pv-price').textContent     = formatPrice(p.price);
+  document.getElementById('pv-origin').innerHTML      = p.origin ? `📍 ${escHtml(p.origin)}` : '—';
+  document.getElementById('pv-badge').innerHTML       = badgeHtml;
+  document.getElementById('pv-desc').textContent      = p.description || 'Chưa có mô tả.';
+  document.getElementById('pv-id').textContent        = `#${p.id}`;
+
+  // Wire edit button inside preview
+  const editBtn = document.getElementById('pv-btn-edit');
+  editBtn.onclick = () => {
+    closeModal('product-preview-modal');
+    openProductModal(p);
+  };
+
+  openModal('product-preview-modal');
 }
 
 document.addEventListener('DOMContentLoaded', init);

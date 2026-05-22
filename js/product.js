@@ -36,17 +36,39 @@ async function init() {
   const id = params.get('id');
   if (!id) { showError(); return; }
 
+  // FIX: tách riêng 2 request thay vì Promise.all
+  // Nếu getCertifications() bị 429, sản phẩm vẫn hiển thị bình thường (chỉ mất badge)
+  let product = null;
+  let certs   = [];
+
   try {
-    const [product, certs] = await Promise.all([getProduct(id), getCertifications()]);
-    if (!product) { showError(); return; }
-    renderProduct(product, certs);
-  } catch {
+    product = await getProduct(id);
+  } catch (err) {
+    console.error('[product.js] Lỗi lấy sản phẩm:', err);
     showError();
+    return;
   }
+
+  if (!product || !product.id) {
+    console.warn('[product.js] Không có dữ liệu sản phẩm cho id:', id);
+    showError();
+    return;
+  }
+
+  try {
+    certs = await getCertifications();
+  } catch (err) {
+    // Không nghiêm trọng — thiếu badge thôi
+    console.warn('[product.js] Không lấy được certifications:', err);
+    certs = [];
+  }
+
+  renderProduct(product, certs);
 }
 
 function renderProduct(p, certs) {
-  const cert   = certs.find(c => c.id === p.certificationId);
+  // FIX: dùng == thay vì === để tránh lỗi string vs number từ MockAPI
+  const cert   = certs.find(c => String(c.id) === String(p.certificationId));
   const imgSrc = getProductImage(p.name, p.image);
 
   // Breadcrumb
@@ -64,11 +86,11 @@ function renderProduct(p, certs) {
   }
 
   // Thông tin
-  document.getElementById('detail-name').textContent    = p.name;
-  document.getElementById('detail-price').textContent   = formatPrice(p.price);
-  document.getElementById('detail-desc').textContent    = p.description || 'Chưa có mô tả.';
-  document.getElementById('detail-origin').innerHTML    = p.origin ? `📍 ${escHtml(p.origin)}` : '';
-  document.getElementById('detail-cert').innerHTML      = cert ? badgeHTML(cert) : '';
+  document.getElementById('detail-name').textContent  = p.name;
+  document.getElementById('detail-price').textContent = formatPrice(p.price);
+  document.getElementById('detail-desc').textContent  = p.description || 'Chưa có mô tả.';
+  document.getElementById('detail-origin').innerHTML  = p.origin ? `📍 ${escHtml(p.origin)}` : '';
+  document.getElementById('detail-cert').innerHTML    = cert ? badgeHTML(cert) : '';
 
   // Hiện nội dung, ẩn skeleton
   document.getElementById('product-loading').style.display = 'none';
