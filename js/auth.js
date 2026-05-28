@@ -8,7 +8,7 @@ function initDatabase() {
   if (!localStorage.getItem(USERS_DB_KEY)) {
     localStorage.setItem(USERS_DB_KEY, JSON.stringify([
       { id: '1', name: 'Quản trị viên', email: 'admin@gmail.com', password: 'adminpassword', role: 'admin' },
-      { id: '2', name: 'Người dùng Eco', email: 'user@gmail.com',  password: 'git add .',  role: 'user'  },
+      { id: '2', name: 'Người dùng Eco', email: 'user@gmail.com',  password: '123456',  role: 'user'  },
     ]));
   }
 }
@@ -121,6 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-login-submit').onclick    = doLogin;
   document.getElementById('btn-register-submit').onclick = doRegister;
+
+  // Hỗ trợ Enter để submit form
+  document.getElementById('login-form')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
+  });
+  document.getElementById('register-form')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doRegister(); }
+  });
 
   document.querySelectorAll('.auth-tab').forEach(btn => {
     btn.onclick = () => switchTab(btn.dataset.tab);

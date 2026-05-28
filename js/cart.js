@@ -242,5 +242,11 @@ export function initCart() {
     if (e.target === document.getElementById('cart-modal')) { closeCartModal(); return; }
     if (e.target.closest('#btn-checkout')) handleCheckout();
   });
-  window.addEventListener('cartUpdated', updateCartBadge);
+  // Re-render modal nếu đang mở khi giỏ hàng thay đổi (VD: thêm item 2 trong khi modal đang hiển thị)
+  window.addEventListener('cartUpdated', () => {
+    updateCartBadge();
+    if (document.getElementById('cart-modal')?.classList.contains('active')) {
+      renderCartModal();
+    }
+  });
 }

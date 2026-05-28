@@ -22,8 +22,10 @@ function initHeader() {
     document.getElementById('btn-logout')?.addEventListener('click', () => {
       if (confirm('Bạn có chắc muốn đăng xuất?')) logout();
     });
-    if (user.role === 'admin')
+    if (user.role === 'admin') {
       document.getElementById('nav-admin-link')?.removeAttribute('hidden');
+      document.getElementById('cart-icon-btn')?.remove();
+    }
   }
 }
 

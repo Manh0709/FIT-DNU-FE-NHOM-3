@@ -436,9 +436,9 @@ function bindModals() {
 }
 
 function handleEdit(type, id) {
-  if (type === 'product')  { const p = state.products.find(x=>x.id===id);       if(p) openProductModal(p); }
-  if (type === 'supplier') { const s = state.suppliers.find(x=>x.id===id);      if(s) openSupplierModal(s); }
-  if (type === 'cert')     { const c = state.certifications.find(x=>x.id===id); if(c) openCertModal(c); }
+  if (type === 'product')  { const p = state.products.find(x=>String(x.id)===String(id));       if(p) openProductModal(p); }
+  if (type === 'supplier') { const s = state.suppliers.find(x=>String(x.id)===String(id));      if(s) openSupplierModal(s); }
+  if (type === 'cert')     { const c = state.certifications.find(x=>String(x.id)===String(id)); if(c) openCertModal(c); }
 }
 
 let _pendingDelete = null;

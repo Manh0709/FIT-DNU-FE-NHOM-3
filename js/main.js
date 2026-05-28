@@ -4,9 +4,12 @@ import { formatPrice, badgeHTML, debounce, escHtml, getProductImage } from './ut
 import { getCurrentUser, logout } from './auth.js';
 import { addToCart, initCart } from './cart.js';
 
-let allProducts  = [];
-let allCerts     = {};
-let activeFilter = 'all';
+let allProducts    = [];
+let allCerts       = {};
+let activeFilter   = 'all';
+let currentPage    = 1;
+const PAGE_SIZE    = 6;
+let filteredList   = [];
 
 // ── Header ────────────────────────────────────────────────
 function initHeader() {
@@ -25,8 +28,11 @@ function initHeader() {
       if (confirm('Bạn có chắc muốn đăng xuất?')) logout();
     });
     document.getElementById('guest-banner')?.remove();
-    if (user.role === 'admin')
+    if (user.role === 'admin') {
       document.getElementById('nav-admin-link')?.removeAttribute('hidden');
+      // Admin không cần giỏ hàng
+      document.getElementById('cart-icon-btn')?.remove();
+    }
   } else {
     document.getElementById('nav-admin-link')?.setAttribute('hidden', '');
     document.getElementById('guest-banner')?.removeAttribute('hidden');
@@ -56,8 +62,9 @@ async function init() {
 }
 
 function applyData(products, certs) {
-  allProducts = products;
-  allCerts    = {};
+  allProducts  = products;
+  filteredList = products;
+  allCerts     = {};
   certs.forEach(c => { allCerts[c.id] = c; });
   renderFilters(certs);
   renderFeaturedSections(allProducts);
@@ -80,15 +87,15 @@ function renderFeaturedSections(products) {
   const sections = [
     {
       id: 'section-sale', icon: '🔥', title: 'Đang Giảm Giá',
-      sub: 'Ưu đãi có hạn — đừng bỏ lỡ!', items: sale.slice(0, 6), theme: 'theme-sale',
+      sub: 'Ưu đãi có hạn — đừng bỏ lỡ!', items: sale.slice(0, 4), theme: 'theme-sale',
     },
     {
       id: 'section-new', icon: '✨', title: 'Sản Phẩm Mới',
-      sub: 'Vừa cập bến — tươi mới mỗi ngày', items: newItems.slice(0, 6), theme: 'theme-new',
+      sub: 'Vừa cập bến — tươi mới mỗi ngày', items: newItems.slice(0, 4), theme: 'theme-new',
     },
     {
       id: 'section-hot', icon: '🌶️', title: 'Đang Được Yêu Thích',
-      sub: 'Top sản phẩm bán chạy tuần này', items: hot.slice(0, 6), theme: 'theme-hot',
+      sub: 'Top sản phẩm bán chạy tuần này', items: hot.slice(0, 4), theme: 'theme-hot',
     },
   ];
 
@@ -230,7 +237,9 @@ function applyFilters() {
     list = list.filter(p =>
       p.name.toLowerCase().includes(q) ||
       (p.origin ?? '').toLowerCase().includes(q));
-  renderProducts(list);
+  filteredList = list;
+  currentPage  = 1;
+  renderProducts(filteredList);
 }
 
 // ── Promo helpers ─────────────────────────────────────────
@@ -251,14 +260,49 @@ function getPromo(p) {
   return           { type: 'eco',  label: '🌿 ECO',  ribbonClass: 'ribbon-eco',  tagClass: 'tag-eco'  };
 }
 
+function renderPagination(total) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  let wrap = document.getElementById('pagination-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id        = 'pagination-wrap';
+    wrap.className = 'pagination-wrap';
+    document.querySelector('.products-section')?.appendChild(wrap);
+  }
+  if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(`<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
+  }
+  wrap.innerHTML = `
+    <button class="page-btn page-prev" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>‹</button>
+    ${pages.join('')}
+    <button class="page-btn page-next" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+
+  wrap.querySelectorAll('.page-btn:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPage = Number(btn.dataset.page);
+      renderProducts(filteredList);
+      document.querySelector('.products-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+
 function renderProducts(list) {
+  filteredList = list;
   const grid = document.getElementById('product-grid');
   if (!grid) return;
   if (!list.length) {
     grid.innerHTML = '<p class="empty-msg">Không tìm thấy sản phẩm phù hợp.</p>';
+    renderPagination(0);
     return;
   }
-  grid.innerHTML = list.map(p => {
+  const start   = (currentPage - 1) * PAGE_SIZE;
+  const paged   = list.slice(start, start + PAGE_SIZE);
+  renderPagination(list.length);
+  grid.innerHTML = paged.map(p => {
+    // paged slice already computed above
     const cert   = allCerts[p.certificationId];
     const imgSrc = getProductImage(p.name, p.image);
     const promo  = getPromo(p);
