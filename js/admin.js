@@ -9,6 +9,10 @@ import { formatPrice, showToast, escHtml, openModal, closeModal, getProductImage
 import { requireAuth, logout } from './auth.js';
 
 // ── State ─────────────────────────────────────────────────
+// Số dòng mỗi trang — chỉnh riêng cho từng bảng vì lượng dữ liệu khác nhau
+// (sản phẩm thường nhiều, nhà cung cấp / chứng nhận thường ít hơn)
+const PAGE_SIZES = { products: 8, suppliers: 5, certs: 4, orders: 6 };
+
 const state = {
   products: [], suppliers: [], certifications: [], orders: [],
   editingId: null, activeTab: 'dashboard',
@@ -16,6 +20,7 @@ const state = {
   sort: { products: { col: null, dir: 1 }, suppliers: { col: null, dir: 1 } },
   search: { products: '', suppliers: '', certs: '', orders: '' },
   orderStatusFilter: '',
+  page: { products: 1, suppliers: 1, certs: 1, orders: 1 },
 };
 
 // ── Auth ──────────────────────────────────────────────────
@@ -194,14 +199,26 @@ function renderProducts() {
   }
 
   const footer = document.getElementById('products-footer');
-  if (footer) footer.textContent = `${list.length} / ${state.products.length} sản phẩm`;
 
   if (!list.length) {
+    if (footer) footer.textContent = `0 / ${state.products.length} sản phẩm`;
     tbody.innerHTML = `<tr><td colspan="6" class="empty-row"><div class="empty-row-inner"><div class="empty-icon">🌿</div><div>${q ? 'Không tìm thấy sản phẩm phù hợp' : 'Chưa có sản phẩm'}</div></div></td></tr>`;
+    renderPagination('products', 'products-table', 0, renderProducts);
     return;
   }
 
-  tbody.innerHTML = list.map(p => {
+  // ── Phân trang ────────────────────────────────────────
+  const { paged, start } = paginate('products', list);
+
+  if (footer) {
+    const from = list.length ? start + 1 : 0;
+    const to   = Math.min(start + PAGE_SIZES.products, list.length);
+    footer.textContent = `${from}–${to} / ${list.length} sản phẩm${q ? ` (lọc từ ${state.products.length})` : ''}`;
+  }
+
+  renderPagination('products', 'products-table', list.length, renderProducts);
+
+  tbody.innerHTML = paged.map(p => {
     const cert = certMap[p.certificationId];
     const imgSrc = getProductImage(p.name, p.image);
     const badgeHtml = cert ? `<span class="badge badge-${cert.badgeColor}">★ ${escHtml(cert.name)}</span>` : '—';
@@ -229,6 +246,57 @@ function renderProducts() {
   });
 }
 
+// ── Phân trang dùng chung (sản phẩm / nhà cung cấp / chứng nhận / đơn hàng) ──
+function renderPagination(key, tableId, total, rerender) {
+  const table = document.getElementById(tableId);
+  const tableWrap = table?.closest('.table-wrap');
+  if (!tableWrap) return;
+
+  let wrap = document.getElementById(`${key}-pagination`);
+
+  if (!total) {
+    if (wrap) wrap.innerHTML = '';
+    return;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZES[key]));
+
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id        = `${key}-pagination`;
+    wrap.className = 'pagination-wrap';
+    tableWrap.appendChild(wrap);
+  }
+
+  const cur = state.page[key];
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(`<button class="page-btn${i === cur ? ' active' : ''}" data-page="${i}">${i}</button>`);
+  }
+  wrap.innerHTML = `
+    <button class="page-btn page-prev" data-page="${cur - 1}" ${cur === 1 ? 'disabled' : ''}>‹</button>
+    ${pages.join('')}
+    <button class="page-btn page-next" data-page="${cur + 1}" ${cur === totalPages ? 'disabled' : ''}>›</button>`;
+
+  wrap.querySelectorAll('.page-btn:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.page[key] = Number(btn.dataset.page);
+      rerender();
+      tableWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+
+/** Cắt list theo trang hiện tại của `key`, tự kẹp về trang hợp lệ nếu vượt quá. */
+function paginate(key, list) {
+  const size = PAGE_SIZES[key];
+  const totalPages = Math.max(1, Math.ceil(list.length / size));
+  if (state.page[key] > totalPages) state.page[key] = totalPages;
+  if (state.page[key] < 1) state.page[key] = 1;
+  const start = (state.page[key] - 1) * size;
+  return { paged: list.slice(start, start + size), start };
+}
+
 // ── Render Suppliers ──────────────────────────────────────
 function renderSuppliers() {
   const tbody = document.querySelector('#suppliers-table tbody');
@@ -247,13 +315,25 @@ function renderSuppliers() {
   });
 
   const footer = document.getElementById('suppliers-footer');
-  if (footer) footer.textContent = `${list.length} / ${state.suppliers.length} nhà cung cấp`;
 
   if (!list.length) {
+    if (footer) footer.textContent = `0 / ${state.suppliers.length} nhà cung cấp`;
     tbody.innerHTML = `<tr><td colspan="5" class="empty-row"><div class="empty-row-inner"><div class="empty-icon">🏭</div><div>${q ? 'Không tìm thấy' : 'Chưa có nhà cung cấp'}</div></div></td></tr>`;
+    renderPagination('suppliers', 'suppliers-table', 0, renderSuppliers);
     return;
   }
-  tbody.innerHTML = list.map(s => `
+
+  const { paged, start } = paginate('suppliers', list);
+
+  if (footer) {
+    const from = start + 1;
+    const to   = Math.min(start + PAGE_SIZES.suppliers, list.length);
+    footer.textContent = `${from}–${to} / ${list.length} nhà cung cấp${q ? ` (lọc từ ${state.suppliers.length})` : ''}`;
+  }
+
+  renderPagination('suppliers', 'suppliers-table', list.length, renderSuppliers);
+
+  tbody.innerHTML = paged.map(s => `
     <tr>
       <td class="td-name">${escHtml(s.name)}</td>
       <td class="td-origin">📍 ${escHtml(s.address ?? '—')}</td>
@@ -277,13 +357,25 @@ function renderCertifications() {
     c.name?.toLowerCase().includes(q) || (c.description ?? '').toLowerCase().includes(q));
 
   const footer = document.getElementById('certs-footer');
-  if (footer) footer.textContent = `${list.length} / ${state.certifications.length} chứng nhận`;
 
   if (!list.length) {
+    if (footer) footer.textContent = `0 / ${state.certifications.length} chứng nhận`;
     tbody.innerHTML = `<tr><td colspan="5" class="empty-row"><div class="empty-row-inner"><div class="empty-icon">🏆</div><div>Chưa có chứng nhận</div></div></td></tr>`;
+    renderPagination('certs', 'certs-table', 0, renderCertifications);
     return;
   }
-  tbody.innerHTML = list.map(c => {
+
+  const { paged, start } = paginate('certs', list);
+
+  if (footer) {
+    const from = start + 1;
+    const to   = Math.min(start + PAGE_SIZES.certs, list.length);
+    footer.textContent = `${from}–${to} / ${list.length} chứng nhận${q ? ` (lọc từ ${state.certifications.length})` : ''}`;
+  }
+
+  renderPagination('certs', 'certs-table', list.length, renderCertifications);
+
+  tbody.innerHTML = paged.map(c => {
     const prodCount = state.products.filter(p => p.certificationId === c.id).length;
     return `<tr>
       <td><span class="badge badge-${c.badgeColor}">★ ${escHtml(c.name)}</span></td>
@@ -306,7 +398,7 @@ function bindSearch() {
     let t;
     el.addEventListener('input', () => {
       clearTimeout(t);
-      t = setTimeout(() => { state.search[key] = el.value; renderFn(); }, 180);
+      t = setTimeout(() => { state.search[key] = el.value; state.page[key] = 1; renderFn(); }, 180);
     });
   };
   bind('search-products',  'products',  renderProducts);
@@ -333,6 +425,7 @@ function bindSearch() {
     });
     th.classList.add(cur.dir === 1 ? 'sort-asc' : 'sort-desc');
 
+    state.page[colKey] = 1;
     if (colKey === 'products') renderProducts();
     else renderSuppliers();
   });
@@ -606,16 +699,27 @@ function renderOrders() {
     list = list.filter(o => o.status === state.orderStatusFilter);
 
   const footer = document.getElementById('orders-footer');
-  if (footer) footer.textContent = `${list.length} / ${state.orders.length} đơn hàng`;
 
   if (!list.length) {
+    if (footer) footer.textContent = `0 / ${state.orders.length} đơn hàng`;
     tbody.innerHTML = `<tr><td colspan="8" class="empty-row">
       <div class="empty-row-inner"><div class="empty-icon">📋</div>
       <div>Không có đơn hàng nào.</div></div></td></tr>`;
+    renderPagination('orders', 'orders-table', 0, renderOrders);
     return;
   }
 
-  tbody.innerHTML = list.map(o => {
+  const { paged, start } = paginate('orders', list);
+
+  if (footer) {
+    const from = start + 1;
+    const to   = Math.min(start + PAGE_SIZES.orders, list.length);
+    footer.textContent = `${from}–${to} / ${list.length} đơn hàng`;
+  }
+
+  renderPagination('orders', 'orders-table', list.length, renderOrders);
+
+  tbody.innerHTML = paged.map(o => {
     const st   = ORDER_STATUS[o.status] || ORDER_STATUS.pending;
     const date = new Date(o.createdAt).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const items = (o.items || []).map(i => `${i.name} ×${i.qty}`).join(', ');
@@ -653,10 +757,12 @@ function renderOrders() {
 function bindOrderSearch() {
   document.getElementById('search-orders')?.addEventListener('input', e => {
     state.search.orders = e.target.value;
+    state.page.orders = 1;
     renderOrders();
   });
   document.getElementById('filter-order-status')?.addEventListener('change', e => {
     state.orderStatusFilter = e.target.value;
+    state.page.orders = 1;
     renderOrders();
   });
 }
